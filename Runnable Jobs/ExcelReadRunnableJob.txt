@@ -1,0 +1,131 @@
+Using System.IO;
+
+Using OfficeOpenXml;
+
+Using OfficeOpenXml.ExcelPackage;
+
+Using OfficeOpenXml.ExcelRange;
+
+class ExcelReadRunnableJob
+
+{
+
+    /// <summary>
+
+    /// Runs the class with the specified arguments.
+
+    /// </summary>
+
+    /// <param name = "_args">The specified arguments.</param>
+
+            public static void main(Args _args)
+
+    {
+
+        
+
+        System.IO.Stream stream;
+
+        ExcelSpreadsheetName sheet;
+
+        FileUploadBuild fileUpload,fileUploadBuild;
+
+        DialogGroup dialogUploadGroup;
+
+
+        FormBuildControl formBuildControl;
+
+        Dialog dialog=new Dialog("Excel Import");
+
+        dialogUploadGroup=dialog.addGroup("@SYS54759");
+
+        formBuildControl=dialog.formBuildDesign().control(dialogUploadGroup.name());
+
+        fileUploadBuild=formBuildControl.addControlEx(classStr(fileUpload),"UploadExcel");
+
+        fileUploadBuild.style(FileUploadStyle::MinimalWithFilename);
+
+        fileUploadBuild.fileTypesAccepted(".xlsx");
+
+        if(dialog.run() && dialog.closedOk())
+
+        {
+
+        FileUpload fileUploadControl=dialog.formRun().control(dialog.formRun().controlId("Upload"));
+
+        FileUploadTemporaryStorageResult
+        fileUploadResult=file::GetFileFromUser(classStr(FileUploadTemporaryStorageStrategy));
+
+        //fileUploadResult=fileUploadControl.getFileUploadResult();
+
+        /*------------------part 1 end---------------------*/
+
+        /*------------------part 2---------------------*/
+
+        if(fileUploadResult!= null && fileUploadResult.getUploadStatus())
+
+        {
+
+
+
+        stream=fileUploadResult.openResult();
+
+
+        using(ExcelPackage  package= new ExcelPackage(stream))
+
+        {
+
+        int rowCount, iterator;
+
+        package.Load(stream);
+
+        ExcelWorksheet worksheet= package.get_workbook().get_worksheets().get_Item(1);
+
+        OfficeOpenXml.ExcelRange range=worksheet.Cells;
+
+        rowCount = worksheet.Dimension.End.Row - worksheet.Dimension.Start.Row + 1;
+
+        for(iterator=2;iterator<=rowCount;iterator++)
+
+        {
+
+                        // Read values from Excel cells
+                        var value1 = range.get_Item(iterator, 1).Value;
+                        var value2 = range.get_Item(iterator, 2).Value;
+                        var value3 = range.get_Item(iterator, 3).Value;
+
+                        // Store values in variables
+                        //ExcelReader.Name = ExcelReader.Name;
+                        var variable1 = value1.ToString();
+                        var variable2 = value2.ToString();
+                        var variable3 = value3.ToString();
+
+                        // Call Info function
+                        Info(variable1);
+                        Info(variable2);
+                        Info(variable3);
+
+
+        }
+
+        }
+
+        }
+
+
+
+        /*------------------part 2 end---------------------*/
+
+        }
+
+        else
+
+        {
+
+        Error("error occured.");
+
+        }
+
+        }
+
+}

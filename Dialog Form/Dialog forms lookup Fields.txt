@@ -1,0 +1,4 @@
+Lookup fields in a dialog Form:
+
+https://dynamics365musings.com/d365-sysoperation-framework-parameters/#:~:text=It%20is%20actually%20quite%20simple,the%20right%20type%20of%20parameters.
+https://dynamics365musings.com/d365-sysoperation-framework-lookup/

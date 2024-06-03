@@ -1,0 +1,66 @@
+[Form]
+public class MultiSelect extends FormRun
+{
+    SysLookupMultiSelectCtrl msLookupCtrl;
+
+    [Control("String")]
+    class DinAdmin_TOLookup
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void lookup()
+        {
+            Query query;
+            QueryBuildDataSource qdbsVend;
+            QueryBuildDataSource qdbsParty;
+
+            //super();
+
+            query = new Query();
+            qdbsVend = query.addDataSource(tableNum(DinAdmin));
+            //qdbsParty = qdbsVend.addDataSource(tableNum(DirPartyTable));
+            //qdbsParty.relations(true);
+
+            qdbsVend.addSelectionField(fieldNum(DinAdmin, TOLookup));
+            //qdbsParty.addSelectionField(fieldNum(DirPartyTable, Name));
+            //qdbsVend.addSelectionField(fieldNum(VendTable, VendGroup));
+            qdbsVend.addSelectionField(fieldNum(DinAdmin, DataAreaId));
+              qdbsVend.addSelectionField(fieldNum(DinAdmin, RecId));
+
+            msLookupCtrl = SysLookupMultiSelectCtrl::constructWithQuery(this.formRun(), this, query);
+        }
+
+    }
+
+    [Control("Button")]
+    class FormButtonControl1
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void clicked()
+        {
+            container selectedRecords;
+            Counter i;
+
+            super();
+
+            selectedRecords = msLookupCtrl.get();
+            for (i = 1; i <= conLen(selectedRecords); i++)
+            {
+                DictTable dictTable = new DictTable(tableNum(DinAdmin));
+                DictField dictField = new DictField(dictTable.id(), fieldNum(DinAdmin, TOLookup));
+
+                str fieldValue = conPeek(selectedRecords, i);
+                Common commonRecord = dictTable.makeRecord();
+                commonRecord.(dictField.id()) = fieldValue;
+                str fieldValueStr = commonRecord.(dictField.id());
+
+                info(fieldValueStr);
+            }
+        }
+
+    }
+
+}

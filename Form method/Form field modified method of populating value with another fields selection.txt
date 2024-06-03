@@ -1,0 +1,24 @@
+public boolean modified()
+{
+    boolean ret;
+    super(); // Call the parent class's modified method, potentially to ensure any inherited behavior is executed
+
+    FormStringControl storeIdControl = this as FormStringControl; // Cast the current control to a FormStringControl
+    FormDataSource tillOpeningBalDS = this.formRun().dataSource(1); // Get the data source at index 1 from the form run
+
+    RetailStoreView retailStore; // Declare a variable to hold the retail store view data
+    str storeId = storeIdControl.valueStr(); // Get the string value from the control which should be the store ID
+
+    // Look up the store name based on the selected store ID
+    select firstonly Name from retailStore
+        where retailStore.StoreNum == storeId;
+
+    // Check if a record was found and update the store name field in the data source
+    if (retailStore.RecId)
+    {
+        DIN_tillOpeningBaltbl.StoreName = retailStore.Name; // Set the store name in the till opening balance table
+    }
+
+    ret = super(); // Call the parent class's modified method again, possibly to get the return value
+    return ret; // Return the result from the parent class's modified method
+}

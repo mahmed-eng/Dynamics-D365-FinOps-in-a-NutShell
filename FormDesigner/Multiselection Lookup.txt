@@ -1,0 +1,30 @@
+  [Control("String")]
+    class DinAdmin_TOLookup1
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void lookup()
+        {
+            Query query;
+            QueryBuildDataSource qdbsVend;
+            QueryBuildDataSource qdbsParty;
+
+            //super();
+
+            query = new Query();
+            qdbsVend = query.addDataSource(tableNum(InventTransferTable));
+            //qdbsParty = qdbsVend.addDataSource(tableNum(DirPartyTable));
+            //qdbsParty.relations(true);
+
+            qdbsVend.addSelectionField(fieldNum(InventTransferTable, transferid));
+            //qdbsParty.addSelectionField(fieldNum(DirPartyTable, Name));
+            //qdbsVend.addSelectionField(fieldNum(VendTable, VendGroup));
+            //qdbsVend.addSelectionField(fieldNum(DinAdmin, DataAreaId));
+            //qdbsVend.addSelectionField(fieldNum(DinAdmin, RecId));
+
+            msLookupCtrl = SysLookupMultiSelectCtrl::constructWithQuery(this.formRun(), this, query);
+
+        }
+    }
+

@@ -1,0 +1,28 @@
+[Control("Button")]
+    class FormButtonControl2
+    {
+        public void clicked()
+        {
+            container selectedRecords;
+            Counter i;
+    
+            super();
+    
+            selectedRecords = msLookupCtrl.get();
+            for (i = 1; i <= conLen(selectedRecords); i++)
+            {
+                container fieldValues = conPeek(selectedRecords, i);
+    
+                for (Counter j = 1; j <= conLen(fieldValues); j++)
+                {
+                    str fieldValue = conPeek(fieldValues, j);
+    
+                    // Create a new record in the grid's data source
+                    DinAdmin.insert();
+                    // Set the value of the TOLookup field in the grid record
+                    DinAdmin.TOLookup = fieldValue;
+                }
+            }
+        }
+    
+    }

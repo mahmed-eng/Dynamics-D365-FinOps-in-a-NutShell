@@ -1,0 +1,22 @@
+[DataSource]
+    class DinAdmin
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name = "_append"></param>
+        public void create(boolean _append = false)
+        {
+
+            GatePassId gatePassId;
+            NumberSequenceReference numberSequenceReference;
+            super(_append);
+            numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(gatePassId));
+            if (numberSequenceReference)
+            {
+                gatePassId = NumberSeq::newGetNum(numberSequenceReference).num();
+                DinAdmin.GatePassId = gatePassId;
+            }
+                  
+        }
+}

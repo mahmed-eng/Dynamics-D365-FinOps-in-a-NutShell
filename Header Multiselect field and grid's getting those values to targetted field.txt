@@ -1,0 +1,52 @@
+    [Control("String")]
+    class DinAdmin_TOLookup
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void lookup()
+        {
+            Query query;
+            QueryBuildDataSource qdbsVend;
+            QueryBuildDataSource qdbsParty;
+
+            //super();
+
+            query = new Query();
+            qdbsVend = query.addDataSource(tableNum(DinAdmin));
+            //qdbsParty = qdbsVend.addDataSource(tableNum(DirPartyTable));
+            //qdbsParty.relations(true);
+
+            qdbsVend.addSelectionField(fieldNum(DinAdmin, TOLookup));
+            //qdbsParty.addSelectionField(fieldNum(DirPartyTable, Name));
+            //qdbsVend.addSelectionField(fieldNum(VendTable, VendGroup));
+            qdbsVend.addSelectionField(fieldNum(DinAdmin, DataAreaId));
+            qdbsVend.addSelectionField(fieldNum(DinAdmin, RecId));
+
+            msLookupCtrl = SysLookupMultiSelectCtrl::constructWithQuery(this.formRun(), this, query);
+
+        }
+    }
+
+    [Control("Button")]
+    class FormButtonControl1
+    {
+        public void clicked()
+        {
+            container selectedRecords;
+            Counter i;
+
+            super();
+
+            selectedRecords = msLookupCtrl.get();
+            for (i = 1; i <= conLen(selectedRecords); i++)
+            {
+                str fieldValue = conPeek(selectedRecords, i);
+
+                // Create a new record in the grid's data source
+                DinAdmin.insert();
+                // Set the value of the TOLookup field in the grid record
+                DinAdmin.TOLookup = fieldValue;
+            }
+        }
+    }

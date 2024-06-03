@@ -1,0 +1,103 @@
+Using System.IO;
+
+Using OfficeOpenXml;
+
+Using OfficeOpenXml.ExcelPackage;
+
+Using OfficeOpenXml.ExcelRange;
+
+class ExcelReadRunnableJob
+{
+    static void main(Args _args)
+    {
+        System.IO.Stream stream;
+        Dialog dialog;
+        DialogGroup dialogUploadGroup;
+        FormBuildControl formBuildControl;
+        FileUploadBuild fileUploadBuild;
+        FileUpload fileUploadControl;
+        FileUploadTemporaryStorageResult fileUploadResult;
+        str fileName;
+        int rowCount, iterator;
+        OfficeOpenXml.ExcelRange range;
+        str Name, Color, Size;
+        int Code;
+        ExcelReader excelReader;
+        
+        dialog = new Dialog("Excel Import Example");
+        dialogUploadGroup = dialog.addGroup("@SYS54759");
+        formBuildControl = dialog.formBuildDesign().control(dialogUploadGroup.name());
+        fileUploadBuild = formBuildControl.addControlEx(classStr(FileUpload), "UploadExcel");
+        fileUploadBuild.style(FileUploadStyle::MinimalWithFilename);
+        fileUploadBuild.fileTypesAccepted(".xlsx");
+        
+        if (dialog.run() && dialog.closedOk())
+        {
+            fileUploadControl = dialog.formRun().control(dialog.formRun().controlId("UploadExcel"));
+            fileUploadResult = fileUploadControl.getFileUploadResult();
+            
+            if (fileUploadResult != null && fileUploadResult.getUploadStatus())
+            {
+                stream = fileUploadResult.openResult();
+                using (ExcelPackage package = new ExcelPackage(stream))
+                {
+                    ExcelWorksheet worksheet = package.get_Workbook().get_Worksheets().get_Item(1); // Replace 1 with the appropriate worksheet index
+                    range = worksheet.Cells;
+                    rowCount = worksheet.Dimension.End.Row - worksheet.Dimension.Start.Row + 1;
+
+                    
+                    ttsbegin;
+                    
+                    for (iterator = 2; iterator <= rowCount; iterator++)
+                    {
+                        Name = range.get_Item(iterator, 1).get_Value().ToString();
+                        Color = range.get_Item(iterator, 2).get_Value().ToString();
+                        Size = range.get_Item(iterator, 3).get_Value().ToString();
+                        Code = str2int(range.get_Item(iterator, 4).get_Value().ToString());
+                        
+                        select firstonly forupdate * from excelReader
+                            where excelReader.Name == Name &&
+                                  excelReader.Color == Color &&
+                                  excelReader.Size == Size &&
+                                  excelReader.Code == Code;
+                        
+                        if (excelReader)
+                        {
+                            // Update existing record
+                            excelReader.Name = Name;
+                            excelReader.Color = Color;
+                            excelReader.Size = Size;
+                            excelReader.Code = Code;
+                            excelReader.update();
+                        }
+                        else
+                        {
+                            // Insert new record
+                            excelReader.clear();
+                            excelReader.Name = Name;
+                            excelReader.Color = Color;
+                            excelReader.Size = Size;
+                            excelReader.Code = Code;
+                            //excelReader.Timein = range.get_Item(iterator, 5).get_Value().ToString();
+                            //excelReader.Timeout = range.get_Item(iterator, 6).get_Value().ToString();
+                            //excelReader.OT = str2num(range.get_Item(iterator, 7).get_Value().ToString());
+                            excelReader.insert();
+                        }
+                    }
+                    
+                    ttscommit;
+                    
+                    info("Data imported successfully.");
+                }
+            }
+            else
+            {
+                error("Error occurred during file upload.");
+            }
+        }
+        else
+        {
+            error("Dialog operation canceled.");
+        }
+    }
+}

@@ -1,0 +1,151 @@
+public class MyDialogForm extends RunBase
+{
+
+    DialogField    EmployeeID;
+    DialogField    EmployeeName;
+    DialogField    Department;
+    DialogField    SubDepartment;
+    DialogField    Location;
+    DialogField    Grade;
+    DialogField    Designation;
+    
+    Employee_Data_Creation empldialog;
+    
+    public container pack()
+    {
+        return conNull();
+    }
+
+    public boolean unpack(container _packedClass)
+    {
+        return true;
+    }
+
+    // NumberSequencing Employee
+    public void create(boolean _append = false)
+    {
+        Employee_ID employee_ID;
+        NumberSequenceReference numberSequenceReference;
+
+        // super(_append);
+        numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(employee_ID));
+        if (numberSequenceReference)
+        {
+            employee_ID = NumberSeq::newGetNum(numberSequenceReference).num();
+            // Employee_Data_Creation.Employee_ID = employee_ID;
+        }
+    }
+
+    Object Dialog()
+    {
+        Dialog dialog;
+        dialog = super();
+        dialog.caption('Create an Employee');
+
+        // Use extendedTypestr instead of extendedTypeNum for Employee_ID
+        EmployeeID = dialog.addField(extendedTypestr(Employee_ID), 'Employee ID');
+        EmployeeName = dialog.addField(extendedTypestr(Employee_Name), 'Employee Name');
+        Department = dialog.addField(extendedTypestr(Department), 'Department');
+        SubDepartment = dialog.addField(extendedTypestr(NCISubDepartment), 'SubDepartment');
+        Location = dialog.addField(extendedTypestr(InventLocationId), 'Location');
+        Grade = dialog.addField(extendedTypestr(Grade), 'Grade');
+        Designation = dialog.addField(extendedTypestr(Designation), 'Designation');
+        
+        return dialog;
+    }
+
+    public boolean getFromDialog()
+    {
+        boolean isValid = super();
+
+        if (EmployeeName.value() == '')
+        {
+            isValid = false;
+            warning('Employee Name is mandatory');
+        }
+
+        if (Department.value() == '')
+        {
+            isValid = false;
+            warning('Department is mandatory');
+        }
+        if (SubDepartment.value() == '')
+        {
+            isValid = false;
+            warning('SubDepartment is mandatory');
+        }
+        if (Location.value() == '')
+        {
+            isValid = false;
+            warning('Location is mandatory');
+        }
+        if (Grade.value() == '')
+        {
+            isValid = false;
+            warning('Grade is mandatory');
+        }
+        if (Designation.value() == '')
+        {
+            isValid = false;
+            warning('Designation is mandatory');
+        }
+
+        if (isValid)
+        {
+            empldialog.Employee_ID   =  EmployeeID.value();
+            empldialog.Employee_Name =  EmployeeName.value();
+            empldialog.Grade         =  Grade.value();
+            empldialog.Department    =  Department.value();
+            empldialog.Location      =  Location.value();
+            empldialog.SubDepartment =  SubDepartment.value();
+            empldialog.Designation   =  Designation.value();
+        }
+
+        return isValid;
+    }
+
+    public void run()
+    {
+        ttsBegin;
+
+        try
+        {
+            empldialog.clear();
+            if (this.getFromDialog())
+            {
+                empldialog.insert();
+                ttsCommit;
+                info("Record has been created successfully");
+            }
+            else
+            {
+                error("Please fill in all mandatory fields.");
+                ttsAbort;
+            }
+        }
+        catch (Exception::Error)
+        {
+            error("Error in creating the record.");
+            ttsAbort;
+        }
+
+        Args args = new Args();
+        FormRun formRun;
+        args.name(formstr(Employee_Data_Creation_View));
+        formRun = classfactory.formRunClass(args);
+        formRun.init();
+        formRun.run();
+        formRun.wait();
+    }
+
+    public static void main(Args _args)
+    {
+        MyDialogForm dialog = new MyDialogForm();
+
+        if (dialog.prompt())
+        {
+            dialog.run();
+        }
+    }
+
+}

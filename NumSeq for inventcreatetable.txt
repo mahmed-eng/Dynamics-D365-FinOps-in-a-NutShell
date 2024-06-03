@@ -1,0 +1,29 @@
+[ExtensionOf(formStr(InventJournalCreate))]
+final class InventJournalCreate_DinProduction_Extension
+{
+    [PostHandlerFor(formstr(InventJournalCreate), formMethodStr(InventJournalCreate, init))]
+    public static void InventJournalCreate_Post_create(XppPrePostArgs args)
+    {
+        WIPNumSeq wipnumseq;
+        // Get the number sequence reference for the WIP number sequence
+        NumberSequenceReference numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(WIPNumSeq));
+
+        if (numberSequenceReference)
+        {
+            // Generate a new WIP number using the number sequence
+            wipnumseq = NumberSeq::newGetNum(numberSequenceReference).num();
+        }
+        else
+        {
+            throw error("WIP number sequence not found.");
+        }
+
+        // Use the generated WIP number as needed
+        info("Generated WIP number: " + wipnumseq);
+
+        
+
+        
+    }
+
+}
