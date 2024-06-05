@@ -1,0 +1,12 @@
+class FG_ProductReceiptRpt_Controller extends SRSReportRunController
+{
+    public static void main(Args _args)
+    {
+        FG_ProductReceiptRpt_Controller controller = new FG_ProductReceiptRpt_Controller();
+
+        controller.parmReportName(ssrsReportStr(FG_ProductReceiptRPT, Report));
+        controller.parmArgs(_args);
+        controller.startOperation();
+    }
+
+}

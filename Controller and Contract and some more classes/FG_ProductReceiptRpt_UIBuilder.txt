@@ -1,0 +1,35 @@
+class FG_ProductReceiptRpt_UIBuilder extends SrsReportDataContractUIBuilder
+{
+    DialogField                    DialogDocumentNo;
+    FG_ProductReceiptRpt_Contract     _contract;
+
+    public void build()
+    {
+        _contract = this.datacontractobject() as FG_ProductReceiptRpt_Contract;
+        DialogDocumentNo   = this.addDialogField(methodStr(FG_ProductReceiptRpt_Contract, parmDocumentNo), _contract);
+    }
+
+    public void lookupDocumentNo(FormStringControl    _control)
+    {
+        Query                   query = new Query();
+        QueryBuildDataSource    qbds_DocumentNo;
+
+        SysTableLookup          sysTablelookup;
+        qbds_DocumentNo = query.addDataSource(tableNum(VENDPACKINGSLIPVERSION));
+        qbds_DocumentNo.fields().addField(fieldNum(VENDPACKINGSLIPVERSION, INTERNALPACKINGSLIPID));
+
+        sysTablelookup = SysTableLookup::newParameters(tableNum(VENDPACKINGSLIPVERSION),_control);
+        sysTablelookup.addLookupfield(fieldnum(VENDPACKINGSLIPVERSION,INTERNALPACKINGSLIPID));
+
+        sysTablelookup.parmQuery(query);
+        sysTablelookup.performFormLookup();
+    }
+
+    public void postRun()
+    {
+        // super();
+        DialogDocumentNo= this.bindInfo().getDialogField(_contract, methodStr(FG_ProductReceiptRpt_Contract, ParmDocumentNo));
+        DialogDocumentNo.registerOverrideMethod(methodStr(FormStringControl, lookup),methodStr(FG_ProductReceiptRpt_UIBuilder,lookupDocumentNo), this);
+    }
+
+}

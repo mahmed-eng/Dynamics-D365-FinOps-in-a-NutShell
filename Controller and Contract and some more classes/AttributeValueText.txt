@@ -1,0 +1,22 @@
+Public AttributeValueText value(ItemId _itemId,
+			  Name  _name = '')
+{
+    EcoResProductAttributeValue             ecoResProductAttributeValue;
+    EcoResAttribute                         ecoResAttribute;
+    EcoResValue                             ecoResValue;
+    InventTable                             _inventTable;
+    AttributeValueText                      attValueText = "";
+
+while select _inventTable where _inventTable.ItemId == _itemId
+      join RecId from ecoResProductAttributeValue
+      where ecoResProductAttributeValue.Product == _inventTable.Product
+      join Name from ecoResAttribute
+      where ecoResProductAttributeValue.Attribute == ecoResAttribute.RecId
+      && ecoResAttribute.Name == _name
+      join ecoResValue
+      where ecoResValue.RecId == ecoResProductAttributeValue.Value
+{
+	 attValueText = ecoResValue.value();
+}
+	return attValueText;
+}

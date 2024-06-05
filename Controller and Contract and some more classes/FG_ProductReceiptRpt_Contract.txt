@@ -1,0 +1,16 @@
+[DataContractAttribute,SysOperationContractProcessingAttribute(classStr(FG_ProductReceiptRpt_UIBuilder))]
+class FG_ProductReceiptRpt_Contract
+{
+    str DocumentNo;
+   
+    [
+    DataMember('DocumentNo'),
+    SysOperationLabelAttribute("DocumentNo")
+    ]
+    public str ParmDocumentNo(str _DocumentNo = DocumentNo)
+    {
+        DocumentNo = _DocumentNo;
+        return DocumentNo;
+    }
+
+}

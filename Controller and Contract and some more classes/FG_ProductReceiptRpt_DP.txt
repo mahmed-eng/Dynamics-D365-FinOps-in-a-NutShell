@@ -1,0 +1,113 @@
+[
+    SRSReportParameterAttribute(classstr(FG_ProductReceiptRpt_Contract))
+]
+public class FG_ProductReceiptRpt_DP extends SRSReportDataProviderBase
+{
+    FG_ProductReceiptRpttbl_Tmp             FG_ProductReceiptRpttbl_Tmp;
+    FG_ProductReceiptRpt_Contract           contract;
+    
+    InventTable                             inventTable;
+   
+    VENDPACKINGSLIPJOUR                     vENDPACKINGSLIPJOUR;
+    VENDPACKINGSLIPTRANS                    vENDPACKINGSLIPTRANS;
+    VENDPACKINGSLIPVERSION                  vENDPACKINGSLIPVERSION;
+    PurchTable                              purchTable;
+    INVENTDIM                               iNVENTDIM;
+    VendTable                               vendTable;
+    DirPartyTable                           dirPartyTable;
+    str                                     DocumentNo;
+
+
+    [SRSReportDataSetAttribute(tableStr(FG_ProductReceiptRpttbl_Tmp))]
+    public FG_ProductReceiptRpttbl_Tmp getFG_ProductReceiptRpttbl_Tmp()
+    {
+        select * from FG_ProductReceiptRpttbl_Tmp;
+        return FG_ProductReceiptRpttbl_Tmp;
+    }
+
+    public void filter()
+    {
+        contract                    = this.parmDataContract();
+        DocumentNo                    = contract.ParmDocumentNo();
+    }
+
+    Public AttributeValueText value(ItemId _itemId,
+              Name  _name = '')
+    {
+        EcoResProductAttributeValue             ecoResProductAttributeValue;
+        EcoResAttribute                         ecoResAttribute;
+        EcoResValue                             ecoResValue;
+        InventTable                             _inventTable;
+        AttributeValueText                      attValueText = "";
+
+        while select _inventTable where _inventTable.ItemId == _itemId
+      join RecId from ecoResProductAttributeValue
+      where ecoResProductAttributeValue.Product == _inventTable.Product
+      join Name from ecoResAttribute
+      where ecoResProductAttributeValue.Attribute == ecoResAttribute.RecId
+      && ecoResAttribute.Name == _name
+      join ecoResValue
+      where ecoResValue.RecId == ecoResProductAttributeValue.Value
+        {
+            attValueText = ecoResValue.value();
+        }
+        return attValueText;
+    }
+
+    public void processReport()
+    {
+        this.filter();
+
+        
+        
+        while select OrderAccount,DocumentDate,PurchID,PackingSlipId from vENDPACKINGSLIPJOUR
+        join ItemId,Name,Qty,PurchUnit,FG_Boxes1,FG_Pieces1
+        from vENDPACKINGSLIPTRANS
+                where vENDPACKINGSLIPTRANS.VENDPACKINGSLIPJOUR == vENDPACKINGSLIPJOUR.Recid
+        join INTERNALPACKINGSLIPID from vENDPACKINGSLIPVERSION
+                where vENDPACKINGSLIPVERSION.VENDPACKINGSLIPJOUR == vENDPACKINGSLIPJOUR.RECID
+                && vENDPACKINGSLIPVERSION.INTERNALPACKINGSLIPID == DocumentNo
+        join AccountingDate,CreatedBy,CreatedDateTime from purchTable
+                where purchTable.PURCHID == vENDPACKINGSLIPJOUR.PurchID
+        join INVENTSIZEID,INVENTCOLORID,INVENTLOCATIONID,INVENTSTYLEID,INVENTBATCHID,WMSLOCATIONID from iNVENTDIM
+                where iNVENTDIM.INVENTDIMID == vENDPACKINGSLIPTRANS.INVENTDIMID
+        join inventTable
+                where inventTable.ItemId == vENDPACKINGSLIPTRANS.ItemId
+      
+        {           
+               
+            FG_ProductReceiptRpttbl_Tmp.clear();
+            FG_ProductReceiptRpttbl_Tmp.FG_OrderAccount               = vENDPACKINGSLIPJOUR.OrderAccount;
+            FG_ProductReceiptRpttbl_Tmp.FG_DocumentDate               = any2Date(vENDPACKINGSLIPJOUR.DocumentDate);
+            FG_ProductReceiptRpttbl_Tmp.FG_PurchID                    = vENDPACKINGSLIPJOUR.PurchID;
+            FG_ProductReceiptRpttbl_Tmp.FG_PackingSlipId              = vENDPACKINGSLIPJOUR.PackingSlipId;
+
+            FG_ProductReceiptRpttbl_Tmp.FG_ItemId                     = vENDPACKINGSLIPTRANS.ItemId;
+            FG_ProductReceiptRpttbl_Tmp.FG_Name                       = vENDPACKINGSLIPTRANS.Name;
+            FG_ProductReceiptRpttbl_Tmp.FG_Qty                        = vENDPACKINGSLIPTRANS.Qty;
+            FG_ProductReceiptRpttbl_Tmp.FG_PurchUnit                  = vENDPACKINGSLIPTRANS.PurchUnit;
+            FG_ProductReceiptRpttbl_Tmp.FG_BOXES1                     = vENDPACKINGSLIPTRANS.FG_Boxes1;
+            FG_ProductReceiptRpttbl_Tmp.FG_Pieces1                    = vENDPACKINGSLIPTRANS.FG_Pieces1;
+
+            FG_ProductReceiptRpttbl_Tmp.FG_INTERNALPACKINGSLIPID      = vENDPACKINGSLIPVERSION.INTERNALPACKINGSLIPID;
+            FG_ProductReceiptRpttbl_Tmp.FG_AccountingDate             = purchTable.CreatedDateTime;
+
+            FG_ProductReceiptRpttbl_Tmp.FG_INVENTSIZEID               = iNVENTDIM.INVENTSIZEID;
+            FG_ProductReceiptRpttbl_Tmp.FG_INVENTCOLORID              = iNVENTDIM.INVENTCOLORID;
+            FG_ProductReceiptRpttbl_Tmp.FG_INVENTLOCATIONID           = iNVENTDIM.INVENTLOCATIONID;
+            FG_ProductReceiptRpttbl_Tmp.FG_INVENTSTYLEID              = iNVENTDIM.INVENTSTYLEID;
+            FG_ProductReceiptRpttbl_Tmp.FG_INVENTBATCHID              = iNVENTDIM.INVENTBATCHID;
+            FG_ProductReceiptRpttbl_Tmp.FG_WMSLOCATIONID              = iNVENTDIM.WMSLOCATIONID;
+
+            FG_ProductReceiptRpttbl_Tmp.FG_Article                    = this.value(inventTable.ItemId,'Article no. manufacturer code');
+            FG_ProductReceiptRpttbl_Tmp.FG_Manufacturer               = this.value(inventTable.ItemId,'Manufacturer code');
+            FG_ProductReceiptRpttbl_Tmp.FG_Weight                     = "";
+            FG_ProductReceiptRpttbl_Tmp.fg_Staff                      = purchTable.CreatedBy;
+
+            select * from vendTable where vendTable.AccountNum == FG_ProductReceiptRpttbl_Tmp.FG_OrderAccount;
+            FG_ProductReceiptRpttbl_Tmp.FG_Supplier = DirPartyTable::getName(vendTable.Party);
+            FG_ProductReceiptRpttbl_Tmp.insert();
+        }
+    }
+
+}
