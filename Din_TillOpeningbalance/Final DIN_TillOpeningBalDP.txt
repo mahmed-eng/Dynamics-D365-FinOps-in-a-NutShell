@@ -1,0 +1,226 @@
+[SRSReportParameterAttribute(classStr(DIN_TillOpeningBalContract))]
+public class DIN_TillOpeningBalDP extends SrsReportDataProviderPreProcessTempDB
+{
+    DIN_TillOpeningBalContract                contract;
+    DINTillOpeningBalTmp                      dinTillOpeningBalTmp;
+    CompanyInfo                               companyinfo;
+    List                                      listStore;
+    ListEnumerator                            listEnumStore;
+    TransDate                                 fromDate, todate;
+    RetailStoreTable                          retailStoreTable,retailStoreTable1,retailStoreTable2,retailStoreTable3;
+    RetailTransactionIncomeExpenseTrans       retailTransactionIncomeExpenseTrans,retailTransactionIncomeExpenseTrans1,retailTransactionIncomeExpenseTrans2,retailTransactionIncomeExpenseTrans3;
+    RetailTransactionInfocodeTrans            retailTransactionInfocodeTrans;
+    RetailIncomeExpenseAccountTable           retailIncomeExpenseAccountTable,retailIncomeExpenseAccountTable1,retailIncomeExpenseAccountTable2,retailIncomeExpenseAccountTable3;
+    RetailTransactionTable                    retailTransactionTable, retailTransactionTable1,retailTransactionTable2,retailTransactionTable3;
+    RetailStoreView                           retailStoreView;
+    DIN_tillOpeningBaltbl                     din_tillOpeningBaltbl;
+
+
+    [SrsReportDataSetAttribute(tableStr('DINTillOpeningBalTmp'))]
+    public DINTillOpeningBalTmp getdinTillOpeningBalTmp()
+    {
+        select * from dinTillOpeningBalTmp;
+
+        return dinTillOpeningBalTmp;
+
+    }
+
+    public void processReport()
+    {
+        contract    =  this.parmDataContract() as DIN_TillOpeningBalContract;
+
+        fromDate    =  contract.parmFromDate();
+        todate      =  contract.parmToDate();
+        listStore   =  contract.parmStoreId();
+
+        this.populateExpenseData();
+       
+       
+
+    }
+
+    private RetailAmountTendered getOpeningBalance(TransDate openingDate, str storeId)
+    {
+        DIN_tillOpeningBaltbl dinTillOpeningBal;
+        RetailAmountTendered openingBalance = 0;
+
+        select firstOnly Petty_Cash_Opening_Balance from dinTillOpeningBal
+        where dinTillOpeningBal.Petty_Cash_Opening_Date == openingDate
+        && dinTillOpeningBal.StoreId == storeId;
+
+        if (dinTillOpeningBal)
+        {
+            openingBalance = dinTillOpeningBal.Petty_Cash_Opening_Balance;
+        }
+
+        return openingBalance;
+    }
+
+    private RetailAmountTendered calculateCashIssues(TransDate openingBalanceDate ,TransDate fromDate1, str storeId)
+    {
+        
+        RetailAmountTendered totalCashIssues = 0;
+
+        while select * from retailStoreTable
+                     join retailTransactionTable
+                     where retailTransactionTable.Channel == retailStoreTable.RecId
+                     join retailTransactionIncomeExpenseTrans
+                     where retailTransactionIncomeExpenseTrans.transactionid == retailTransactionTable.transactionId
+                     && retailTransactionIncomeExpenseTrans.store == retailTransactionTable.store
+                     && retailTransactionIncomeExpenseTrans.terminal == retailTransactionTable.terminal
+                     join retailIncomeExpenseAccountTable
+                     where retailIncomeExpenseAccountTable.StoreId  == retailTransactionIncomeExpenseTrans.store
+                     && retailIncomeExpenseAccountTable.accountNum  == retailTransactionIncomeExpenseTrans.incomeExepenseAccount
+                     && (retailIncomeExpenseAccountTable.name  like 'Other Exp.*')
+                     && retailTransactionTable.type == RetailTransactionType::IncomeExpense
+                     && (retailStoreTable.StoreNumber == storeId)
+                     && retailTransactionIncomeExpenseTrans.transDate >= openingBalanceDate && retailTransactionIncomeExpenseTrans.transDate < fromDate1
+                     && retailTransactionTable.entryStatus != RetailEntryStatus::Voided
+
+        {
+            totalCashIssues += retailTransactionTable.grossAmount;
+        }
+
+        return totalCashIssues;
+    }
+
+    private RetailAmountTendered calculateExpenses(TransDate openingBalanceDate ,TransDate fromDate2, str storeId)
+    {
+        
+        RetailAmountTendered totalExpenses = 0;
+
+        while select * from retailStoreTable
+                     join retailTransactionTable
+                     where retailTransactionTable.Channel == retailStoreTable.RecId
+                     join retailTransactionIncomeExpenseTrans
+                     where retailTransactionIncomeExpenseTrans.transactionid == retailTransactionTable.transactionId
+                     && retailTransactionIncomeExpenseTrans.store == retailTransactionTable.store
+                     && retailTransactionIncomeExpenseTrans.terminal == retailTransactionTable.terminal
+                     join retailIncomeExpenseAccountTable
+                     where retailIncomeExpenseAccountTable.StoreId  == retailTransactionIncomeExpenseTrans.store
+                     && retailIncomeExpenseAccountTable.accountNum  == retailTransactionIncomeExpenseTrans.incomeExepenseAccount
+                     && !(retailIncomeExpenseAccountTable.name  like 'Other Exp.*')
+                     && retailTransactionTable.type == RetailTransactionType::IncomeExpense
+                     && (retailStoreTable.StoreNumber == storeId)
+                     && retailTransactionIncomeExpenseTrans.transDate >= openingBalanceDate && retailTransactionIncomeExpenseTrans.transDate < fromDate2
+                     && retailTransactionTable.entryStatus != RetailEntryStatus::Voided
+
+        {
+            totalExpenses += retailTransactionTable.grossAmount;
+        }
+
+        return totalExpenses;
+    }
+
+    private void populateExpenseData()
+    {
+
+        if(listStore && !listStore.empty())
+        {
+            listEnumStore = listStore.getEnumerator();
+            while(listEnumStore.moveNext())
+            {
+                str   storeId  =  listEnumStore.current();
+
+                TransDate openingBalanceDate = str2Date("1/31/2022", 213);
+                TransDate fromDate1 = fromDate;
+                TransDate toDate1 =   toDate;
+                TransDate fromDate2 = fromDate;
+                TransDate toDate2 =   toDate;
+            
+                TransDate currentDate = fromDate;
+                int i = 1;
+                RetailAmountTendered openingBalance = this.getOpeningBalance(openingBalanceDate, storeId);
+                RetailAmountTendered cashIssues = this.calculateCashIssues(openingBalanceDate, fromDate1, storeId);
+                RetailAmountTendered expenses = this.calculateExpenses(openingBalanceDate,fromDate2, storeId);
+                RetailAmountTendered adjustedOpeningBalance;
+
+                select firstonly Name from retailStoreView
+                                 where retailStoreView.StoreNum == storeId;
+
+                while(currentDate <= Todate)
+                {
+                   
+                    adjustedOpeningBalance = openingBalance + cashIssues - expenses;
+                   
+                       
+                    select * from retailStoreTable where (retailStoreTable.StoreNumber == storeId);
+                    ////Query for expenses
+                    while    select  sum(grossamount) from retailtransactiontable
+                            where retailTransactionTable.Channel == retailStoreTable.RecId
+                        join transdate from retailTransactionIncomeExpenseTrans group by TransDate
+                     where retailTransactionIncomeExpenseTrans.transactionid == retailTransactionTable.transactionId
+                     && retailTransactionIncomeExpenseTrans.store == retailTransactionTable.store
+                     && retailTransactionIncomeExpenseTrans.terminal == retailTransactionTable.terminal
+                     join name from retailIncomeExpenseAccountTable group by name
+                     where retailIncomeExpenseAccountTable.StoreId  == retailTransactionIncomeExpenseTrans.store
+                     && retailIncomeExpenseAccountTable.accountNum  == retailTransactionIncomeExpenseTrans.incomeExepenseAccount
+                     && !(retailIncomeExpenseAccountTable.name  like 'Other Exp.*')
+                     //&& !(retailIncomeExpenseAccountTable.name  like 'Petty*') //&& retailIncomeExpenseAccountTable.name == 'Conveyance'
+                     && retailTransactionTable.type == RetailTransactionType::IncomeExpense
+                     && retailTransactionIncomeExpenseTrans.transDate >= currentDate && retailTransactionIncomeExpenseTrans.transDate <= currentDate
+                        && retailTransactionTable.entryStatus != RetailEntryStatus::Voided
+                   
+                       
+                    {
+
+                        dinTillOpeningBalTmp.clear();
+
+                        dinTillOpeningBalTmp.FromDate       =    fromDate;
+                        dinTillOpeningBalTmp.ToDate         =    todate;
+                        dinTillOpeningBalTmp.StoreId        =    storeId;
+                        dinTillOpeningBalTmp.StoreName      =    retailStoreView.Name;
+                        dinTillOpeningBalTmp.CompanyName   = CompanyInfo::find().Name;
+                        dinTillOpeningBalTmp.CompanyLogo   = CompanyImage::findByRecord(companyinfo).Image;
+
+                        expenses += retailTransactionTable.grossAmount;
+                        dinTillOpeningBalTmp.ExpName     =   retailIncomeExpenseAccountTable.name;
+                        dinTillOpeningBalTmp.ExpAmount        = retailTransactionTable.grossAmount;
+                        dinTillOpeningBalTmp.ODate          =   retailTransactionIncomeExpenseTrans.transDate;
+
+                        select sum(grossamount) from  retailTransactionTable1
+                     join retailStoreTable1
+                     where retailTransactionTable1.Channel == retailStoreTable1.RecId
+                     join transdate from retailTransactionIncomeExpenseTrans1 group by TransDate
+                     where retailTransactionIncomeExpenseTrans1.transactionid == retailTransactionTable1.transactionId
+                     && retailTransactionIncomeExpenseTrans1.store == retailTransactionTable1.store
+                     && retailTransactionIncomeExpenseTrans1.terminal == retailTransactionTable1.terminal
+                     join name from retailIncomeExpenseAccountTable1 group by name
+                     where retailIncomeExpenseAccountTable1.StoreId  == retailTransactionIncomeExpenseTrans1.store
+                     && retailIncomeExpenseAccountTable1.accountNum  == retailTransactionIncomeExpenseTrans1.incomeExepenseAccount
+                     && (retailIncomeExpenseAccountTable1.name  like 'Other Exp.*')
+                     //&& !(retailIncomeExpenseAccountTable1.name  like 'Petty*') //&& retailIncomeExpenseAccountTable.name == 'Conveyance'
+                     && retailTransactionTable1.type == RetailTransactionType::IncomeExpense
+                     && (retailStoreTable1.StoreNumber == storeId)
+                     && retailTransactionIncomeExpenseTrans1.transDate >= currentDate && retailTransactionIncomeExpenseTrans1.transDate <= currentDate
+                     && retailTransactionTable1.entryStatus != RetailEntryStatus::Voided;
+                     
+                        if(cashIssues != retailTransactionTable1.grossAmount)
+                        {
+                        cashIssues += retailTransactionTable1.grossAmount;
+                        
+                        dinTillOpeningBalTmp.CashIssue        = retailTransactionTable1.grossAmount;
+                        }
+                       
+             
+
+                        dinTillOpeningBalTmp.OpeningBalance = adjustedOpeningBalance;
+                        dinTillOpeningBalTmp.insert();
+              
+                    }
+                     
+                    currentDate =     currentDate +1;
+                }
+              
+              
+               
+               
+
+               
+               
+
+            }
+        }
+    }
+
+}

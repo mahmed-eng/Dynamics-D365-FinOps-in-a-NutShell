@@ -1,0 +1,115 @@
+public class DIN_TillOpeningBalUIBuilder extends SrsReportDataContractUIBuilder
+{
+    // Dialog fields for user input
+    DialogField FromDate, ToDate, Store;
+
+    // Variables to store date range values
+    FromDate fromDateRange;
+    ToDate toDateRange;
+
+    // List to store selected districts
+    List selectedDistrict = new List(Types::String);
+
+    // Contract object to hold data
+    DIN_TillOpeningBalContract contract;
+
+    // Method to build the UI components
+    public void build()
+    {
+        // Initialize contract object
+        contract = this.dataContractObject();
+
+        // Add dialog fields to the UI and bind them to the contract
+        FromDate = this.addDialogField(methodStr(DIN_TillOpeningBalContract, parmFromDate), contract);
+        ToDate = this.addDialogField(methodStr(DIN_TillOpeningBalContract, parmToDate), contract);
+        Store = this.addDialogField(methodStr(DIN_TillOpeningBalContract, parmStoreId), contract);
+    }
+
+    // Method to configure dialog fields after the UI is built
+    public void postbuild()
+    {
+        // Initialize FromDate field
+        FromDate.value(null);
+        FromDate = this.bindInfo().getDialogField(contract, methodStr(DIN_TillOpeningBalContract, parmFromDate));
+        FromDate.registerOverrideMethod(methodStr(FormDateControl, leave), methodStr(DIN_TillOpeningBalUIBuilder, fromDateLeave), this);
+
+        // Initialize ToDate field
+        ToDate.value(null);
+        ToDate = this.bindInfo().getDialogField(contract, methodStr(DIN_TillOpeningBalContract, parmToDate));
+        ToDate.registerOverrideMethod(methodStr(FormDateControl, leave), methodStr(DIN_TillOpeningBalUIBuilder, toDateLeave), this);
+
+        // Initialize Store field
+        Store = this.bindInfo().getDialogField(contract, methodStr(DIN_TillOpeningBalContract, parmStoreId));
+        Store.registerOverrideMethod(methodStr(FormStringControl, lookup), methodStr(DIN_TillOpeningBalUIBuilder, storelookup), this);
+
+        // Configure lookup button for Store field
+        if (Store)
+        {
+            Store.lookupButton(2);
+        }
+    }
+
+    // Method to handle the leave event for FromDate field
+    public boolean fromDateLeave(FormDateControl _control)
+    {
+        if (_control.dateValue() != dateNull())
+        {
+            fromDateRange = _control.dateValue();
+        }
+        return true;
+    }
+
+    // Method to handle the leave event for ToDate field
+    public boolean toDateLeave(FormDateControl _control)
+    {
+        if (_control.dateValue() != dateNull())
+        {
+            toDateRange = _control.dateValue();
+        }
+        return true;
+    }
+
+    // Method to handle the lookup event for Store field
+    private void storelookup(FormStringControl _control)
+    {
+        // Create a new query object
+        Query query = new Query();
+
+        // Variables for date-time range (unused in this method)
+        utcdatetime fDateTime, tDateTime;
+        ListEnumerator enum, enum1;
+
+        // Data source objects for the query
+        QueryBuildDataSource qdbsStore, qbdsRCTable, qbdsDPTable;
+
+        // Add data sources to the query
+        qdbsStore = query.addDataSource(tableNum(RetailStoreTable));
+        qdbsStore.addRange(fieldNum(RetailStoreTable, inventLocationDataAreaId)).value(curExt());
+        qbdsRCTable = qdbsStore.addDataSource(tableNum(RetailChannelTable));
+        qbdsRCTable.relations(true);
+        qbdsDPTable = qbdsRCTable.addDataSource(tableNum(DirPartyTable));
+        qbdsDPTable.relations(true);
+
+        // Configure fields for the data sources
+        qdbsStore.fields().dynamic(false);
+        qdbsStore.fields().clearFieldList();
+        qbdsDPTable.fields().dynamic(false);
+        qbdsDPTable.fields().clearFieldList();
+        qbdsRCTable.fields().dynamic(false);
+        qbdsRCTable.fields().clearFieldList();
+
+        qdbsStore.fields().addField(fieldNum(RetailStoreTable, storenumber));
+        qbdsDPTable.fields().addField(fieldNum(DirPartyTable, Name));
+        qdbsStore.addOrderByField(fieldNum(RetailStoreTable, storenumber));
+
+        // Display lookup with multi-select grid
+        SysLookupMultiSelectGrid::lookup(query, _control, _control, _control, conNull());
+    }
+
+    // Method to be executed after the report run
+    public void postRun()
+    {
+        // Call the superclass method (currently commented out)
+        // super();        
+    }
+}

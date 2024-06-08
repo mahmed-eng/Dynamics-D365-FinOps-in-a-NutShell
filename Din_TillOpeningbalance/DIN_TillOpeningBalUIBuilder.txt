@@ -1,0 +1,102 @@
+public class DIN_TillOpeningBalUIBuilder extends SrsReportDataContractUIBuilder
+{
+    DialogField                          FromDate, ToDate, Store;
+    FromDate                             fromDateRange;
+    ToDate                               toDateRange;
+    List                                 selectedDistrict   = new List(Types::String);
+    DIN_TillOpeningBalContract           contract;
+
+    public void build()
+    {
+        contract        = this.dataContractObject();
+
+        FromDate        = this.addDialogField(methodStr(DIN_TillOpeningBalContract, parmFromDate), contract);
+        ToDate          = this.addDialogField(methodStr(DIN_TillOpeningBalContract, parmToDate), contract);
+        Store           = this.addDialogField(methodStr(DIN_TillOpeningBalContract, parmStoreId), contract);
+        
+    }
+
+    public void postbuild()
+    {
+        //FromDate
+        FromDate.value(null);
+        FromDate    = this.bindInfo().getDialogField(contract,methodStr(DIN_TillOpeningBalContract, parmFromDate));
+        FromDate.registerOverrideMethod(methodStr(FormDateControl, leave), methodStr(DIN_TillOpeningBalUIBuilder, fromDateLeave), this);
+
+        //ToDate
+        ToDate.value(null);
+        ToDate      = this.bindInfo().getDialogField(contract,methodStr(DIN_TillOpeningBalContract, parmToDate));
+        ToDate.registerOverrideMethod(methodStr(FormDateControl, leave), methodStr(DIN_TillOpeningBalUIBuilder, toDateLeave), this);
+       
+       
+        Store       = this.bindInfo().getDialogField(contract, methodStr(DIN_TillOpeningBalContract, parmStoreId));
+        Store.registerOverrideMethod(methodStr(FormStringControl, lookup), methodStr(DIN_TillOpeningBalUIBuilder, storelookup), this);
+       
+        if (Store)
+        {
+            Store.lookupButton(2);
+        }
+
+    }
+
+   // FromDate Leave Method
+    public boolean fromDateLeave(FormDateControl _control)
+    {
+        if (_control.dateValue() != dateNull())
+        {
+            fromDateRange = _control.dateValue();
+        }
+        return true;
+    }
+
+    //ToDate Leave Method
+    public boolean toDateLeave(FormDateControl _control)
+    {
+        if (_control.dateValue() != dateNull())
+        {
+            toDateRange = _control.dateValue();
+        }
+        return true;
+    }
+
+    private void storelookup(FormStringControl _control)
+    {
+
+        Query               query = new Query();
+        utcdatetime         fDateTime, tDateTime;
+        ListEnumerator          enum, enum1;
+
+        QueryBuildDataSource    qdbsStore, qbdsRCTable, qbdsDPTable;
+
+        
+        qdbsStore =  query.addDataSource(tableNum(RetailStoreTable));
+
+        qdbsStore.addRange(fieldNum(RetailStoreTable, inventLocationDataAreaId)).value(curExt());
+
+        qbdsRCTable = qdbsStore.addDataSource(tableNum(RetailChannelTable));
+        qbdsRCTable.relations(true);
+
+        qbdsDPTable = qbdsRCTable.addDataSource(tableNum(DirPartyTable));
+        qbdsDPTable.relations(true);
+
+        qdbsStore.fields().dynamic(false);
+        qdbsStore.fields().clearFieldList();
+        qbdsDPTable.fields().dynamic(false);
+        qbdsDPTable.fields().clearFieldList();
+        qbdsRCTable.fields().dynamic(false);
+        qbdsRCTable.fields().clearFieldList();
+
+        qdbsStore.fields().addField(fieldNum(RetailStoreTable, storenumber));
+        qbdsDPTable.fields().addField(fieldNum(DirPartyTable, Name));
+        qdbsStore.addOrderByField(fieldNum(RetailStoreTable, storenumber));
+
+        SysLookupMultiSelectGrid::lookup(query,_control, _control, _control, conNull());
+
+    }
+
+    public void postRun()
+    {
+        //super();        
+    }
+
+}

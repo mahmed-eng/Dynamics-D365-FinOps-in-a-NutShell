@@ -1,0 +1,50 @@
+[DataMemberAttribute,SysOperationContractProcessingAttribute(classStr(DIN_TillOpeningBalUIBuilder))]
+//[DataContractAttribute,SysOperationContractProcessingAttribute(classStr(DIN_TillOpeningBalUIBuilder))]
+public class DIN_TillOpeningBalContract
+{
+    TransDate                       fromDate, toDate;
+    List                             storeID;
+
+        [
+        DataMemberAttribute(identifierStr(fromDate)),
+        SysOperationLabelAttribute ("From Date"),
+        SysOperationHelpTextAttribute("From Date"),
+        SysOperationDisplayOrderAttribute("1")
+        ]
+        public TransDate parmFromDate(TransDate  _FromDate = fromDate)
+    {
+        fromDate = _FromDate;
+        return fromDate;
+    }
+
+    [
+        DataMemberAttribute(identifierStr(toDate)),
+        SysOperationLabelAttribute ("To Date"),
+        SysOperationHelpTextAttribute("To Date"),
+        SysOperationDisplayOrderAttribute("2")
+    ]
+        public TransDate parmToDate(TransDate  _ToDate = toDate)
+    {
+        toDate = _ToDate;
+        return toDate;
+    }
+
+    [
+        DataMemberAttribute(identifierStr(storeId)),
+        SysOperationLabelAttribute (literalStr("Stores")),
+        SysOperationHelpTextAttribute(literalStr("Stores")),
+        SysOperationDisplayOrderAttribute("3"),
+        AifCollectionTypeAttribute(identifierStr(RetailStoreTable), Types::String)
+    ]
+    //public str parmStoreId(str _storeId = storeId)
+    //{
+    //    storeId = _storeId;
+    //    return storeId;
+    //}
+    public List parmStoreId(List _storeId = storeId)
+    {
+        storeId = _storeId;
+        return storeId;
+    }
+
+}

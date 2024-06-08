@@ -1,0 +1,66 @@
+// This class represents a contract for managing the opening balance of a till (cash register).
+// The class is decorated with attributes that define its behavior in the context of data 
+// operations and serialization.
+[DataMemberAttribute, SysOperationContractProcessingAttribute(classStr(DIN_TillOpeningBalUIBuilder))]
+// [DataContractAttribute, SysOperationContractProcessingAttribute(classStr(DIN_TillOpeningBalUIBuilder))]
+public class DIN_TillOpeningBalContract
+{
+    // Fields to hold the from date, to date, and store IDs.
+    TransDate fromDate, toDate;
+    List storeID;
+
+    // Property to get or set the 'fromDate' field.
+    // This property is decorated with attributes to define its behavior and metadata.
+    [
+        DataMemberAttribute(identifierStr(fromDate)),  // Specifies that this property should be serialized.
+        SysOperationLabelAttribute("From Date"),       // Label to display in the UI.
+        SysOperationHelpTextAttribute("From Date"),    // Help text to display in the UI.
+        SysOperationDisplayOrderAttribute("1")         // Order in which this property should be displayed.
+    ]
+    public TransDate parmFromDate(TransDate _FromDate = fromDate)
+    {
+        // Sets the 'fromDate' field to the given value and returns it.
+        fromDate = _FromDate;
+        return fromDate;
+    }
+
+    // Property to get or set the 'toDate' field.
+    // This property is decorated with attributes to define its behavior and metadata.
+    [
+        DataMemberAttribute(identifierStr(toDate)),    // Specifies that this property should be serialized.
+        SysOperationLabelAttribute("To Date"),         // Label to display in the UI.
+        SysOperationHelpTextAttribute("To Date"),      // Help text to display in the UI.
+        SysOperationDisplayOrderAttribute("2")         // Order in which this property should be displayed.
+    ]
+    public TransDate parmToDate(TransDate _ToDate = toDate)
+    {
+        // Sets the 'toDate' field to the given value and returns it.
+        toDate = _ToDate;
+        return toDate;
+    }
+
+    // Property to get or set the 'storeID' field.
+    // This property is decorated with attributes to define its behavior and metadata.
+    [
+        DataMemberAttribute(identifierStr(storeId)),                       // Specifies that this property should be serialized.
+        SysOperationLabelAttribute(literalStr("Stores")),                  // Label to display in the UI.
+        SysOperationHelpTextAttribute(literalStr("Stores")),               // Help text to display in the UI.
+        SysOperationDisplayOrderAttribute("3"),                            // Order in which this property should be displayed.
+        AifCollectionTypeAttribute(identifierStr(RetailStoreTable), Types::String)  // Specifies the type of collection and its elements.
+    ]
+    // The 'parmStoreId' method was originally intended to work with a single string value,
+    // but it has been commented out and replaced with a method that works with a list of store IDs.
+    // public str parmStoreId(str _storeId = storeId)
+    // {
+    //     storeId = _storeId;
+    //     return storeId;
+    // }
+
+    // Property to get or set the 'storeID' field as a list.
+    public List parmStoreId(List _storeId = storeId)
+    {
+        // Sets the 'storeID' field to the given value and returns it.
+        storeId = _storeId;
+        return storeId;
+    }
+}
