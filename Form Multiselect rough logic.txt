@@ -1,0 +1,73 @@
+[Form]
+public class UserData extends FormRun
+{
+    SysLookupMultiSelectCtrl msLookupCtrl;
+
+    Badge_Details   badges;
+    UserData        usrdata;
+
+    [DataSource]
+    class UserData
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name = "_record"></param>
+        /// <param name = "_options"></param>
+        public void displayOption(Common _record, FormRowDisplayOption _options)
+        {
+            if (usrdata.Badge_holder like 'B*' && _record.(fieldNum(UserData,badge_holder)))  // Adjusted the syntax
+            {
+                
+                _options.backColor(WinAPI::RGB2int(255, 100, 100));
+                
+            }
+            super(_record, _options);
+        }
+
+    }
+
+}
+
+    //[Control("String")]
+    //class UserData_Badge_holder
+    //{
+    //    /// <summary>
+    //    ///
+    //    /// </summary>
+    //    public void lookup()
+    //    {
+
+    //        Query query;
+    //        QueryBuildDataSource qdbsbadge;
+    //        container selectedTransferIds;
+    //        super();
+
+    //        query = new Query();
+    //        qdbsbadge = query.addDataSource(tableNum(Badge_Details));
+    //        qdbsbadge.addSelectionField(fieldNum(Badge_Details, colors));
+
+
+    //        msLookupCtrl = SysLookupMultiSelectCtrl::constructWithQuery(this.formRun(), this, query);
+    //        selectedTransferIds = msLookupCtrl.get();
+
+    //        // Convert container to comma-separated string
+    //        str badgeHolderString;
+    //        for (int i = 1; i <= conLen(selectedTransferIds); i++)
+    //        {
+    //            if (i > 1)
+    //            {
+    //                badgeHolderString += ",";
+    //            }
+    //            badgeHolderString += conPeek(selectedTransferIds, i);
+    //        }
+
+    //        // Insert into UserData table
+
+    //        UserData.Badge_holder = badgeHolderString;
+    //        UserData.insert();
+
+
+    //    }
+
+    //}
