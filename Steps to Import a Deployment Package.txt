@@ -1,0 +1,25 @@
+Steps to Import a Deployment Package:
+Log in to LCS:
+
+Go to the LCS portal.
+Sign in with your Microsoft account credentials.
+Open Your Project:
+
+Navigate to the specific LCS project where you want to import the deployment package.
+Go to Asset Library:
+
+In your project dashboard, locate the "Asset Library" tile and click on it.
+Upload the Deployment Package:
+
+In the Asset Library, select the “Software deployable package” tab.
+Click on the "Add" button to upload your deployment package.
+Fill in the required details (name, description, etc.), then browse to the location of your .zip file and upload it.
+Once uploaded, you should see the package listed in the Software deployable package library.
+Deploy the Package:
+
+Go back to your LCS project dashboard.
+Find the “Environment” section and select the environment where you want to deploy the package.
+Click on the “Maintain” button and then select “Apply updates”.
+In the “Apply updates” screen, choose the deployment package you uploaded from the list.
+Follow the prompts to start the deployment process. This may include validating the package and confirming the deployment.
+Monitor the status of the deployment in the environment’s “History” or “Monitoring” section to ensure it completes successfully.
