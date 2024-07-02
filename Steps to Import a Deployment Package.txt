@@ -24,3 +24,6 @@ Click on the “Maintain” button and then select “Apply updates”.
 In the “Apply updates” screen, choose the deployment package you uploaded from the list.
 Follow the prompts to start the deployment process. This may include validating the package and confirming the deployment.
 Monitor the status of the deployment in the environment’s “History” or “Monitoring” section to ensure it completes successfully.
+
+
+Link: https://chatgpt.com/share/802a94cd-9ca3-4f81-b086-6fa60b876b81
