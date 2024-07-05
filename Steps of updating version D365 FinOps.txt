@@ -1,0 +1,29 @@
+
+1. Download the package from LCS
+2. Unblock the zip file using right click
+3. Copy the package to C drive
+4. Extract the package and rename the folder to "FinOps10027"
+5. Change the runbookid and runbookfile name as per our desired
+6. Copy and Paste the modules from Query file and insert PC Name to DefaultTopologyData via notepad after making copy of DefaultTopologyData 
+7. Open CMD using Administrator
+8. Paste Query from 2 to 5 one by one
+9. There are 39 Steps to execute in which step 12 and 17 would take some time
+10. Once all query executed Restart the IIS and Refresh it
+11. Check the Application version after refresh
+
+Query:
+
+1.	<string>RetailCloudPos</string>
+	<string>RetailProvisioning</string>
+	<string>RetailSDK</string>
+	<string>RetailSelfService</string>
+	<string>RetailServer</string>
+	<string>RetailStorefront</string>
+	<string>TestAssets</string>
+	<string>PerfSDK</string>
+
+2.	AXUpdateInstaller.exe generate -runbookid="10027" -topologyfile="DefaultTopologyData.xml" -servicemodelfile="DefaultServiceModelData.xml" -runbookfile="0508.xml"
+3.	AXUpdateInstaller.exe import -runbookfile="0508.xml"
+4.	AXUpdateInstaller.exe list
+5.	AXUpdateInstaller.exe execute -runbookid="10027"
+6.	AXUpdateInstaller.exe execute -runbookid="10027" -rerunstep="17"   To rerun any step
