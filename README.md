@@ -43,6 +43,3 @@ For support, visit the Microsoft Support page
 ## Contributing
 Contributions are welcome! If you find any issues or have suggestions for improvement, please submit a pull request or open an issue in the GitHub repository.
 
-## License
-This project is licensed under the MIT License.
-
