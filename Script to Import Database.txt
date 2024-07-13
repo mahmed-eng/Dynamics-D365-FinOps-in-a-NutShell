@@ -1,0 +1,13 @@
+STEPS OF IMPORTING DATABASE TO DEV ENVIRONMENT:
+1- Download and Install SqlPackage for Windows
+
+2- DROP DATABASE AxDB;
+
+3- cd C:\Users\Administrator\Downloads\sqlpackage-win-x64-en-162.3.566.1 Enter
+
+4- Type Command 'sqlpackage' in cmd(Administrator)
+
+5- SqlPackage.exe /a:import /sf:C:\Users\Administrator\Downloads\diners-stgbackup.bacpac /tsn:MININT-FN7JP81 /tdn:AxDB /p:CommandTimeout=20000 /ttsc:True
+
+
+
