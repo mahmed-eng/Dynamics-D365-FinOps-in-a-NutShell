@@ -1,0 +1,56 @@
+[Form]
+public class DIN_ItemMasterDetailForm extends FormRun
+{
+    DIN_NTIItemIdEDT ntiitemid;
+    NumberSequenceReference numberSequenceReference;
+    
+    [DataSource]
+    class DIN_ItemMasterDetailTable
+    {
+        public void create(boolean _append = false)
+        {
+            super(_append);
+
+            // Clear all fields by setting them to empty or null values
+            //// Developed by Muhammad Ahmed Hashmi
+            DIN_ItemMasterDetailTable.NTI_ItemName = '';
+            DIN_ItemMasterDetailTable.NTI_ItemUOM = '';
+            DIN_ItemMasterDetailTable.NTI_ItemDepartment = '';
+            DIN_ItemMasterDetailTable.NTI_ItemType = '';
+
+            // Fetch the number sequence reference
+            numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(DIN_NTIItemIdEDT));
+            if (numberSequenceReference)
+            {
+                // Generate the initial number sequence
+                ntiitemid = NumberSeq::newGetNum(numberSequenceReference).num();
+                DIN_ItemMasterDetailTable.NTI_ItemID = ntiitemid;
+            }
+        }
+
+        public void write()
+        {
+            // Check if all fields are filled
+            if (DIN_ItemMasterDetailTable.NTI_ItemName == ''
+                || DIN_ItemMasterDetailTable.NTI_ItemUOM == ''
+                || DIN_ItemMasterDetailTable.NTI_ItemDepartment == ''
+                || DIN_ItemMasterDetailTable.NTI_ItemType == '')
+            {
+                throw error("All fields must be filled before saving the record.");
+            }
+
+            // Increment the number sequence by 1 after validation
+            ntiitemid = NumberSeq::newGetNum(numberSequenceReference).num();
+            DIN_ItemMasterDetailTable.NTI_ItemID = ntiitemid;
+
+            super();
+
+            // Clear all fields after saving the record
+            DIN_ItemMasterDetailTable.NTI_ItemName = '';
+            DIN_ItemMasterDetailTable.NTI_ItemUOM = '';
+            DIN_ItemMasterDetailTable.NTI_ItemDepartment = '';
+            DIN_ItemMasterDetailTable.NTI_ItemType = '';
+        }
+    }
+    //// Developed by Muhammad Ahmed Hashmi
+}
