@@ -1,0 +1,68 @@
+public void clicked()
+        {
+            DIN_PurchaseItemInventoryTmpTable tmpTable;
+            DIN_ItemInventoryTable din_ItemInventoryTable;
+            FormDataSource ds;
+            str VendorName;
+            str DocumentNo;
+            str itemId;
+            str itemName;
+            str Department;
+            str SubDepartment;
+            //int Qty;
+            real Amount;
+            str Location;
+            str SerialNo;
+            str ModelNo;
+            str BarCodeNo;
+            date ExpiryDate;
+            EnumId Condition;
+            super();
+            
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_ItemPurchaseForm, DIN_PurchaseItemInventoryTmpTable));
+
+            VendorName = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_VendorName));
+            DocumentNo = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_DocumentNum));
+            itemId = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_Itemid));
+            itemName = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_ItemName));
+            Department = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_ItemDepartment));
+            SubDepartment = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_ItemSubDepartment));
+            //Qty = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_ItemLocation));
+            Amount = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_Amount));
+            Location = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_ItemLocation));
+            SerialNo = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_SerialNum));
+            ModelNo = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_ModelNum));
+            BarCodeNo = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_BarCodeNum));
+            ExpiryDate = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_ExpiryDate));
+            Condition = ds.cursor().(fieldNum(DIN_PurchaseItemInventoryTmpTable, NTI_Condition));
+            
+            ttsBegin;
+
+            // Create a new record
+            //tmpTable.clear();
+            //tmpTable.NTI_Itemid = itemId;
+            din_ItemInventoryTable.NTI_VendorName = VendorName;
+            din_ItemInventoryTable.NTI_DocumentNum = DocumentNo;
+            din_ItemInventoryTable.NTI_Itemid = itemId;
+            din_ItemInventoryTable.NTI_ItemName = itemName;
+            din_ItemInventoryTable.NTI_ItemDepartment = Department;
+            din_ItemInventoryTable.NTI_ItemSubDepartment = SubDepartment;
+            din_ItemInventoryTable.NTI_ItemLocation = Location;
+            din_ItemInventoryTable.NTI_Qty = 1;
+            din_ItemInventoryTable.NTI_Amount = Amount;
+            din_ItemInventoryTable.NTI_SerialNum = SerialNo;
+            din_ItemInventoryTable.NTI_ModelNum = ModelNo;
+            din_ItemInventoryTable.NTI_BarCodeNum = BarCodeNo;
+            din_ItemInventoryTable.NTI_ExpiryDate = ExpiryDate;
+            din_ItemInventoryTable.NTI_Condition = Condition;
+            din_ItemInventoryTable.NTI_Trans_Type = 'Purchase';
+
+            // Insert the record into the table
+            //tmpTable.insert();
+            din_ItemInventoryTable.insert();
+            DIN_PurchaseItemInventoryTmpTable.clear();
+            ttsCommit;
+
+            
+            info(strFmt("Item %1 has been inserted successfully.", itemId));
+        }
