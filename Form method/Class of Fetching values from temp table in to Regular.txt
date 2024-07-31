@@ -1,0 +1,29 @@
+class ABCInsertAndClearTemp
+{
+    public static void insertRecordsAndClearTemp()
+    {
+        Abctemp tempTable;
+        AbcTable targetTable;
+
+        // Start a transaction
+        ttsBegin;
+
+        // Iterate over each record in the temp table
+        while select * from tempTable
+        {
+            // Insert into the target table
+            targetTable.clear();
+            targetTable.Field1 = tempTable.Field1;
+            targetTable.Field2 = tempTable.Field2;
+            //... map other fields accordingly
+
+            targetTable.insert();
+        }
+
+        // Delete all records from the temp table
+        delete_from tempTable;
+
+        // Commit the transaction
+        ttsCommit;
+    }
+}

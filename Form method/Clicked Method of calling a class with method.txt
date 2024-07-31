@@ -1,0 +1,7 @@
+public void clicked()
+{
+    super();
+
+    // Call the static method to insert records and clear the temp table
+    ABCInsertAndClearTemp::insertRecordsAndClearTemp();
+}
