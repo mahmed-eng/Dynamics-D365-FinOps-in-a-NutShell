@@ -1,0 +1,5 @@
+Creating a Checkbox in D365 FinOps Forms:
+
+Create a table.
+Add an enum field to the table.
+In the properties of the enum field, set the EnumType to NoYes.
