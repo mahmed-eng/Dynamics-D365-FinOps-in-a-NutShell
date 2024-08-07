@@ -1,0 +1,27 @@
+[Control("Button")]
+class PostButton
+{
+    public void clicked()
+    {
+        ttsBegin;
+        
+        // Declare variables
+        RecId recId;
+        InventTable inventTable;
+
+        // Check for duplicate NTI_SerialNum
+        select firstOnly recId
+            from inventTable
+            where inventTable.NTI_SerialNum == SerialNo;
+
+        if (inventTable.RecId)
+        {
+            // Duplicate found, show error message and abort the operation
+            ttsAbort;
+            error(strFmt("Duplicate serial number %1 found. Insertion aborted.", SerialNo));
+            return;
+        }
+        
+        ttsCommit; // Ensure you commit the transaction if no errors are found
+    }
+}
