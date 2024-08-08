@@ -1,0 +1,48 @@
+[Control("String")]
+class DIN_MaintenanceItemInventoryTmpTable_NTI_SerialNum
+{
+    /// <summary>
+    /// Updates the temporary inventory table based on the serial number from the form control.
+    /// </summary>
+    /// <returns>Returns true if the parent class's modified method is successful, otherwise false.</returns>
+    public boolean modified()
+    {
+        boolean ret;
+        super(); // Call the parent class's modified method
+
+        FormStringControl storeIdControl = this as FormStringControl; // Cast to FormStringControl
+        FormDataSource din_ItemInventoryTableDS = this.formRun().dataSource(1); // Get the data source from the form
+
+        DIN_ItemInventoryTable din_ItemInventoryTable; // Declare a variable for item inventory data
+        str serialnum = storeIdControl.valueStr(); // Get the serial number from the form control
+
+        // Retrieve item details based on the serial number and transaction type 'Purchase'
+        select firstonly NTI_SerialNum, NTI_BarCodeNum, NTI_ModelNum from din_ItemInventoryTable
+        where din_ItemInventoryTable.NTI_SerialNum == serialnum && din_ItemInventoryTable.NTI_Trans_Type == 'Purchase';
+
+        // If a record is found, update the temporary inventory table with item details
+        if (din_ItemInventoryTable.RecId)
+        {
+            DIN_MaintenanceItemInventoryTmpTable.NTI_BarCodeNum = din_ItemInventoryTable.NTI_BarCodeNum;
+            DIN_MaintenanceItemInventoryTmpTable.NTI_ModelNum = din_ItemInventoryTable.NTI_ModelNum;
+        }
+
+        // Retrieve additional item details and order by RecId in descending order
+        select firstonly NTI_SerialNum, NTI_BarCodeNum, NTI_ModelNum, NTI_ItemDepartment, NTI_ItemSubDepartment, RecId, NTI_ResponsiblePerson, NTI_ItemLocation 
+        from din_ItemInventoryTable
+        join din_ItemInventoryTable
+        order by RecId desc
+        where din_ItemInventoryTable.NTI_SerialNum == serialnum;
+
+        // If a record is found, update additional fields in the temporary inventory table
+        if (din_ItemInventoryTable.RecId)
+        {
+            DIN_MaintenanceItemInventoryTmpTable.NTI_ItemLocation = din_ItemInventoryTable.NTI_ItemLocation;
+            DIN_MaintenanceItemInventoryTmpTable.NTI_ItemDepartment = din_ItemInventoryTable.NTI_ItemDepartment;
+            DIN_MaintenanceItemInventoryTmpTable.NTI_ItemSubDepartment = din_ItemInventoryTable.NTI_ItemSubDepartment;
+        }
+
+        ret = super(); // Call the parent class's modified method again
+        return ret; // Return the result from the parent class's modified method
+    }
+}
