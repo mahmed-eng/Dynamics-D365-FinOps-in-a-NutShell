@@ -1,0 +1,31 @@
+public boolean modified()
+{
+    boolean ret; // Variable to store the result from the modified method
+
+    // Call the parent class's modified method to ensure any inherited behavior is executed
+    super(); 
+
+    // Cast the current control to FormStringControl to access specific properties and methods
+    FormStringControl storeIdControl = this as FormStringControl; 
+    
+    // Retrieve the data source at index 1 from the form run
+    FormDataSource din_ItemInventoryTableDS = this.formRun().dataSource(1); 
+    
+    // Declare a variable to hold data related to item master details
+    DIN_ItemMasterDetailTable din_ItemMasterDetailTable; 
+    
+    // Get the store ID from the FormStringControl as a string
+    str SerialNo = storeIdControl.valueStr(); 
+    
+    // Get the Item ID from the temporary table as a string
+    str ItemId = DIN_PurchaseItemInventoryTmpTable_NTI_ItemID.valueStr();
+    
+    // Combine Item ID and Store ID into a barcode number format and assign it to the temporary table
+    DIN_PurchaseItemInventoryTmpTable.NTI_BarCodeNum = ItemId + ' - ' + SerialNo ;
+    
+    // Call the parent class's modified method again to get its result
+    ret = super(); 
+    
+    // Return the result from the parent class's modified method
+    return ret; 
+}
