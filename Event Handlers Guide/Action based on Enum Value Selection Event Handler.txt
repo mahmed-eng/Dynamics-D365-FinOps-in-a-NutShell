@@ -1,0 +1,53 @@
+public final class DIN_LookupVendorMaintenanceEventHandler
+{
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    [FormControlEventHandler(formControlStr(DIN_ItemMaintenanceForm, DIN_MaintenanceItemInventoryTmpTable_NTI_MaintenanceVendor), FormControlEventType::Lookup)]
+    public static void DIN_MaintenanceItemInventoryTmpTable_NTI_MaintenanceVendor_OnLookup(FormControl sender, FormControlEventArgs e)
+    {
+        // Get the form data source from the sender
+        FormDataSource formDataSource = sender.formRun().dataSource();
+
+        // Retrieve the current record from the data source
+        DIN_MaintenanceItemInventoryTmpTable dinMaintenanceItemInventoryTmpTable = formDataSource.cursor();
+
+        // Now you can implement your lookup logic based on the NTI_Section field
+        switch (dinMaintenanceItemInventoryTmpTable.NTI_Section)
+        {
+           
+            case VendorCategory::MFG:
+                {
+                    // Create a query object for CfzVendorPaymentJournal
+                    Query query = new Query();
+                    QueryBuildDataSource qbds = query.addDataSource(tableNum(CfzVendorPaymentJournal));
+
+                    // Setup SysTableLookup for MFG
+                    SysTableLookup sysTableLookup = SysTableLookup::newParameters(tableNum(CfzVendorPaymentJournal), sender);
+                    sysTableLookup.addLookupField(fieldNum(CfzVendorPaymentJournal, VendorName));
+                    sysTableLookup.parmQuery(query);
+                    sysTableLookup.performFormLookup();
+                    break;
+                }
+            case VendorCategory::Retail:
+                {
+                    // Create a query object for VendTableCube
+                    Query queryRetail = new Query();
+                    QueryBuildDataSource qbdsRetail = queryRetail.addDataSource(tableNum(VendTableCube));
+
+                    // Setup SysTableLookup for Retail
+                    SysTableLookup sysTableLookupRetail = SysTableLookup::newParameters(tableNum(VendTableCube), sender);
+                    sysTableLookupRetail.addLookupField(fieldNum(VendTableCube, Name));
+                    sysTableLookupRetail.parmQuery(queryRetail);
+                    sysTableLookupRetail.performFormLookup();
+                    break;
+                }
+            default:
+                break;
+        }
+
+    }
+
+}
