@@ -1,0 +1,127 @@
+using System.IO;
+using OfficeOpenXml;
+using OfficeOpenXml.ExcelPackage;
+using OfficeOpenXml.ExcelRange;
+
+class DIN_ImportDataEmployeeRunable
+{
+    static void main(Args _args)
+    {
+        Stream stream;
+        Dialog dialog;
+        DialogGroup dialogUploadGroup;
+        FormBuildControl formBuildControl;
+        FileUploadBuild fileUploadBuild;
+        FileUpload fileUploadControl;
+        FileUploadTemporaryStorageResult fileUploadResult;
+        str fileName;
+        int rowCount, iterator;
+        ExcelRange range;
+
+        // Initialize the employee table buffer
+        DIN_EmployeeTable dinEmployeeTable;
+        
+        dialog = new Dialog("Excel Import");
+        dialogUploadGroup = dialog.addGroup("@SYS54759");
+        formBuildControl = dialog.formBuildDesign().control(dialogUploadGroup.name());
+        fileUploadBuild = formBuildControl.addControlEx(classStr(FileUpload), "UploadExcel");
+        fileUploadBuild.style(FileUploadStyle::MinimalWithFilename);
+        fileUploadBuild.fileTypesAccepted(".xlsx");
+
+        if (dialog.run() && dialog.closedOk())
+        {
+            fileUploadControl = dialog.formRun().control(dialog.formRun().controlId("UploadExcel"));
+            fileUploadResult = fileUploadControl.getFileUploadResult();
+
+            if (fileUploadResult != null && fileUploadResult.getUploadStatus())
+            {
+                stream = fileUploadResult.openResult();
+                using (ExcelPackage package = new ExcelPackage(stream))
+                {
+                    ExcelWorksheet worksheet = package.get_Workbook().get_Worksheets().get_Item(1); // Replace 1 with the appropriate worksheet index
+                    range = worksheet.Cells;
+                    rowCount = worksheet.Dimension.End.Row - worksheet.Dimension.Start.Row + 1;
+
+                    ttsbegin;
+
+                    for (iterator = 1; iterator <= rowCount; iterator++) // Start from 2 if the first row contains headers
+                    {
+                        // Read and process data from each row
+                        dinEmployeeTable.EMP_ID = range.get_Item(iterator, 1).get_Value().ToString();
+                        dinEmployeeTable.EMP_NAME = range.get_Item(iterator, 2).get_Value().ToString();
+                        dinEmployeeTable.EMP_FATHERHUSBANDNAME = range.get_Item(iterator, 3).get_Value().ToString();
+                        dinEmployeeTable.EMP_CNIC = range.get_Item(iterator, 4).get_Value() ? range.get_Item(iterator, 4).get_Value().ToString() : '';
+                        dinEmployeeTable.EMP_DEPARTMENT = range.get_Item(iterator, 5).get_Value().ToString();
+                        dinEmployeeTable.EMP_SUBDEPARTMENT = range.get_Item(iterator, 6).get_Value() ? range.get_Item(iterator, 6).get_Value().ToString() : '';
+                        dinEmployeeTable.EMP_DESIGNATION = range.get_Item(iterator, 7).get_Value().ToString();
+                        //dinEmployeeTable.EMP_POSITION = range.get_Item(iterator, 8).get_Value().ToString();
+
+                        // Convert string to enum
+                        switch (range.get_Item(iterator, 8).get_Value().ToString())
+                        {
+                            case "Probation":
+                                dinEmployeeTable.EMP_TYPE = EMP_TYPE::Probabtion;
+                                break;
+                            case "Permenant":
+                                dinEmployeeTable.EMP_TYPE = EMP_TYPE::Permenant;
+                                break;                            
+                                                     
+                        }
+
+                        dinEmployeeTable.EMP_REPORTINGTO = range.get_Item(iterator, 9).get_Value().ToString();
+                        dinEmployeeTable.EMP_JOININGDATE = range.get_Item(iterator, 10).get_Value();
+
+                        // Convert string to enum
+                        switch (range.get_Item(iterator, 11).get_Value().ToString())
+                        {
+                            case "Yes":
+                                dinEmployeeTable.EMP_STATUS = NoYes::Yes;
+                                break;
+                            case "No":
+                                dinEmployeeTable.EMP_STATUS = NoYes::No;
+                                break;
+                        }
+
+                        // Convert string to enum
+                        switch (range.get_Item(iterator, 12).get_Value().ToString())
+                        {
+                            case "OFS":
+                                dinEmployeeTable.EMP_GROUP = Emp_Group::OFS;
+                                break;
+                            case "FS":
+                                dinEmployeeTable.EMP_GROUP = Emp_Group::FS;
+                                break;
+                            case "NA1":
+                                dinEmployeeTable.EMP_GROUP = Emp_Group::NA1;
+                                break;
+                            case "RAP":
+                                dinEmployeeTable.EMP_GROUP = Emp_Group::RAP;
+                                break;
+                            case "HOD":
+                                dinEmployeeTable.EMP_GROUP = Emp_Group::HOD;
+                                break;
+                        }
+
+                        dinEmployeeTable.EMP_ADDRESS = range.get_Item(iterator, 13).get_Value() ? range.get_Item(iterator, 13).get_Value().ToString() : '';
+
+                        // Insert record into the database
+                        dinEmployeeTable.insert();
+                    }
+
+                    ttscommit;
+
+                    info("Data imported successfully.");
+                }
+            }
+            else
+            {
+                error("An error occurred during the file upload process.");
+            }
+        }
+        else
+        {
+            error("Dialog operation canceled.");
+        }
+    }
+
+}
