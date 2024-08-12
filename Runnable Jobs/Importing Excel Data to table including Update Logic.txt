@@ -1,0 +1,110 @@
+//new
+using System.IO;
+using OfficeOpenXml;
+using OfficeOpenXml.ExcelPackage;
+using OfficeOpenXml.ExcelRange;
+
+class EmpImportDataRunnableClass
+{
+    static void main(Args _args)
+    {
+        System.IO.Stream stream;
+        Dialog dialog;
+        DialogGroup dialogUploadGroup;
+        FormBuildControl formBuildControl;
+        FileUploadBuild fileUploadBuild;
+        FileUpload fileUploadControl;
+        FileUploadTemporaryStorageResult fileUploadResult;
+        str fileName;
+        int rowCount, iterator;
+        ExcelRange range;
+        
+        str Id, Name;
+        date JDate;
+        Type EmpType;
+      
+        TestEmp testemp;
+        
+        dialog = new Dialog("Excel Import");
+        dialogUploadGroup = dialog.addGroup("@SYS54759");
+        formBuildControl = dialog.formBuildDesign().control(dialogUploadGroup.name());
+        fileUploadBuild = formBuildControl.addControlEx(classStr(FileUpload), "UploadExcel");
+        fileUploadBuild.style(FileUploadStyle::MinimalWithFilename);
+        fileUploadBuild.fileTypesAccepted(".xlsx");
+        
+        if (dialog.run() && dialog.closedOk())
+        {
+            fileUploadControl = dialog.formRun().control(dialog.formRun().controlId("UploadExcel"));
+            fileUploadResult = fileUploadControl.getFileUploadResult();
+            
+            if (fileUploadResult != null && fileUploadResult.getUploadStatus())
+            {
+                stream = fileUploadResult.openResult();
+                using (ExcelPackage package = new ExcelPackage(stream))
+                {
+                    ExcelWorksheet worksheet = package.get_Workbook().get_Worksheets().get_Item(1); // Replace 1 with the appropriate worksheet index
+                    range = worksheet.Cells;
+                    rowCount = worksheet.Dimension.End.Row - worksheet.Dimension.Start.Row + 1;
+
+                    ttsbegin;
+
+                    for (iterator = 2; iterator <= rowCount; iterator++)
+                    {
+                        Id = range.get_Item(iterator, 1).get_Value().ToString();
+                        Name = range.get_Item(iterator, 2).get_Value().ToString();
+                        JDate = range.get_Item(iterator, 3).get_Value();
+
+                        // Convert string to enum
+                        switch (range.get_Item(iterator, 4).get_Value().ToString())
+                        {
+                            case "Probation":
+                                EmpType = Type::Probation;
+                                break;
+                            case "Permanent":
+                                EmpType = Type::Permanent;
+                                break;
+                        }
+
+                        select firstonly forupdate * from TestEmp
+                            where TestEmp.Id == Id &&
+                                  TestEmp.Name == Name &&
+                                  TestEmp.JDate == JDate;
+                        
+                        if (TestEmp)
+                        {
+                            // Update existing record
+                            TestEmp.Id = Id;
+                            TestEmp.Name = Name;
+                            TestEmp.JDate = JDate;
+                            TestEmp.Type = EmpType;
+                            TestEmp.update();
+                        }
+                        else
+                        {
+                            // Insert new record
+                            TestEmp.clear();
+                            TestEmp.Id = Id;
+                            TestEmp.Name = Name;
+                            TestEmp.JDate = JDate;
+                            TestEmp.Type = EmpType;
+                         
+                            TestEmp.insert();
+                        }
+                    }
+
+                    ttscommit;
+                    
+                    info("Data imported successfully.");
+                }
+            }
+            else
+            {
+                error("An error occurred during the file upload process.");
+            }
+        }
+        else
+        {
+            error("Dialog operation canceled.");
+        }
+    }
+}
