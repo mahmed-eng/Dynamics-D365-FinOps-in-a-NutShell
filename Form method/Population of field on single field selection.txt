@@ -1,0 +1,30 @@
+ public boolean modified()
+        {
+            boolean ret;
+            super();
+
+            FormStringControl storeIdControl = this as FormStringControl;
+            FormDataSource DIN_GeneratorDieselConsumptionTableDS = this.formRun().dataSource(1);
+           
+            DIN_GeneratorDetailTable din_GeneratorDetailTable;
+            str Location = storeIdControl.valueStr();
+
+           
+            select * from din_GeneratorDetailTable
+            where din_GeneratorDetailTable.DIN_GenSetLocation == Location;
+
+            
+            if (din_GeneratorDetailTable.RecId)
+            {
+                DIN_GeneratorDieselConsumptionTmpTable.DIN_GenSetModel = din_GeneratorDetailTable.DIN_GenSetModel;
+                DIN_GeneratorDieselConsumptionTmpTable.DIN_GenSetSerialNo = din_GeneratorDetailTable.DIN_GenSetSerialNo;
+                DIN_GeneratorDieselConsumptionTmpTable.DIN_GenSetCapicity = din_GeneratorDetailTable.DIN_GenSetCapicity;
+                DIN_GeneratorDieselConsumptionTmpTable.DIN_GenSetTankCapicity = din_GeneratorDetailTable.DIN_GenSetTankCapicity;
+                DIN_GeneratorDieselConsumptionTmpTable.DIN_GenSetPerHourConsumption = din_GeneratorDetailTable.DIN_GenSetPerHourConsumption;
+                DIN_GeneratorDieselConsumptionTmpTable.DIN_LoadSheddingHours = din_GeneratorDetailTable.DIN_LoadSheddingHours;
+                DIN_GeneratorDieselConsumptionTmpTable.DIN_GenSetLastReading = din_GeneratorDetailTable.DIN_GenSetLastReading;
+            }
+
+            ret = super();
+            return ret;
+        }
