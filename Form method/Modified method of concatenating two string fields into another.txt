@@ -1,3 +1,4 @@
+//This will applied on a field named barcode which will be shown as the user input in serial field 'caz (barcode = serial + itemid)
 public boolean modified()
 {
     boolean ret; // Variable to store the result from the modified method
