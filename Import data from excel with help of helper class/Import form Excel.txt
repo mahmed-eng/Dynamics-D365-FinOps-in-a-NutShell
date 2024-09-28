@@ -1,0 +1,489 @@
+Using System.IO;
+
+Using OfficeOpenXml;
+
+Using OfficeOpenXml.ExcelPackage;
+
+Using OfficeOpenXml.ExcelRange;
+
+[Form]
+public class DinBarcodeUtility extends FormRun
+{
+
+
+                
+    /// <summary>
+    ///
+    /// </summary>
+    public void init()
+    {
+        super();
+
+        delete_from DinBarcodeUtility;
+
+        Hierarchy.text("All");
+        ItemId.text("All");
+        Barcode.text("All");
+        
+    }
+
+    [Control("String")]
+    class Hierarchy
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void lookup()
+        {
+            // super();
+
+            Query                       query = new Query();
+            QueryBuildDataSource        queryBuildDataSource;
+            QueryBuildRange             queryBuildRange;
+            EcoResCategory              ecoResCategory, ecoResCategory2;
+            DinRetailHierarchyViewLevel DinRetailHierarchyViewLevel;
+            SysLookupMultiSelectCtrl    msCtrl;
+
+
+            //SysTableLookup              sysTableLookup = SysTableLookup::newParameters(tableNum(EcoResCategory), this);
+            //sysTableLookup.addLookupField(fieldNum(EcoResCategory, Name));
+
+            queryBuildDataSource = query.addDataSource(tableNum(EcoResCategory));
+            queryBuildDataSource.addSelectionField(fieldNum(EcoResCategory, Name));
+
+            queryBuildDataSource.addRange(fieldNum(EcoResCategory, Level)).value(SysQuery::value(5));
+
+            //   msCtrl =  SysLookupMultiSelectCtrl::constructWithQuery(this.formRun(), this, query);
+            SysLookupMultiSelectGrid::lookup(query,this, this, this, conNull());
+
+            //sysTableLookup.parmQuery(query);
+            //sysTableLookup.performFormLookup();
+
+        }
+
+    }
+
+    [Control("String")]
+    class ItemId
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void lookup()
+        {
+            // super();
+
+            Query                       query = new Query();
+            QueryBuildDataSource        queryBuildDataSource, queryBuildDataSource2;
+            QueryBuildRange             queryBuildRange;
+            EcoResCategory              ecoResCategory, ecoResCategory2;
+            DinRetailHierarchyViewLevel DinRetailHierarchyViewLevel;
+            SysLookupMultiSelectCtrl    msCtrl;
+            List                        hierarchyList;
+            ListEnumerator              hierarchyListEnumerator;
+            str                         hierarchyListStr;  
+            date                        itemcreationDate;
+
+            //SysTableLookup              sysTableLookup = SysTableLookup::newParameters(tableNum(DinRetailHierarchyViewLevel), this);
+            //sysTableLookup.addLookupField(fieldNum(DinRetailHierarchyViewLevel, ItemId));
+            // query.literals(1);
+            queryBuildDataSource = query.addDataSource(tableNum(DinRetailHierarchyViewLevel));
+            queryBuildDataSource.addSelectionField(fieldNum(DinRetailHierarchyViewLevel, ItemId));
+            
+
+            if(Hierarchy.valueStr() != '')
+            {
+                hierarchyList = strSplit(Hierarchy.valueStr(), ';');
+
+                hierarchyListEnumerator = hierarchyList.getEnumerator();
+
+                while(hierarchyListEnumerator.moveNext())
+                {
+                    hierarchyListStr = hierarchyListEnumerator.current();
+
+                    queryBuildDataSource.addRange(fieldNum(DinRetailHierarchyViewLevel, Level2)).value(hierarchyListStr);
+
+                    queryBuildDataSource2 = queryBuildDataSource.addDataSource(tableNum(InventTable));
+
+                    queryBuildDataSource2.relations(false);
+                    queryBuildDataSource2.joinMode(JoinMode::InnerJoin);
+                    queryBuildDataSource2.fetchmode(QueryFetchMode::One2One);
+                    queryBuildDataSource2.addLink(fieldNum(DinRetailHierarchyViewLevel, ItemId),fieldNum(InventTable, ItemId));
+                       
+                   
+                   
+                    queryBuildDataSource2.addRange(fieldNum(InventTable, CreatedDateTime)).value(queryRange(StartDate.dateValue(), EndDate.dateValue()));
+                    queryBuildDataSource2.addSelectionField(fieldNum(InventTable, NameAlias));
+                    //while select ItemId from DinRetailHierarchyViewLevel
+                    //    where DinRetailHierarchyViewLevel.Level2 == hierarchyListStr
+                    //{
+                    //    itemcreationDate = DateTimeUtil::date(InventTable::find(DinRetailHierarchyViewLevel.itemId).CreatedDateTime);
+
+                    //    if(itemcreationDate >= StartDate.dateValue() && itemcreationDate <= EndDate.dateValue())
+                    //    {
+                    //        queryBuildDataSource.addRange(fieldNum(DinRetailHierarchyViewLevel, ItemId)).value(DinRetailHierarchyViewLevel.itemId);
+                    //    }
+
+                    //}
+                }
+
+
+
+                //while(hierarchyListEnumerator.moveNext())
+                //{
+                //    hierarchyListStr = hierarchyListEnumerator.current();
+                //    queryBuildDataSource.addRange(fieldNum(DinRetailHierarchyViewLevel, Level2)).value(hierarchyListStr);
+                //    queryBuildDataSource2 = queryBuildDataSource.addDataSource(tableNum(InventTable));
+
+                //    queryBuildDataSource2.relations(false);
+                //    queryBuildDataSource2.joinMode(JoinMode::InnerJoin);
+                //    queryBuildDataSource2.fetchmode(QueryFetchMode::One2One);
+                //    queryBuildDataSource2.addLink(fieldNum(DinRetailHierarchyViewLevel, ItemId),fieldNum(InventTable, ItemId));
+                //    queryBuildDataSource2.addRange(fieldNum(InventTable, CreatedDateTime)).value(queryRange(StartDate.dateValue(), EndDate.dateValue()));
+                //}
+
+               // msCtrl =  SysLookupMultiSelectCtrl::constructWithQuery(this.formRun(), this, query);
+                SysLookupMultiSelectGrid::lookup(query,this, this, this, conNull());
+
+            }
+
+        }
+
+    }
+
+    [Control("String")]
+    class Barcode
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void lookup()
+        {
+
+            Query                       query = new Query();
+            QueryBuildDataSource        queryBuildDataSource;
+            QueryBuildRange             queryBuildRange;
+            EcoResCategory              ecoResCategory, ecoResCategory2;
+            DinRetailHierarchyViewLevel DinRetailHierarchyViewLevel;
+            SysLookupMultiSelectCtrl    msCtrl;
+            List                        itemList;
+            ListEnumerator              itemListEnumerator;
+            str                         itemListStr;
+
+            //SysTableLookup              sysTableLookup = SysTableLookup::newParameters(tableNum(DinRetailHierarchyViewLevel), this);
+            //sysTableLookup.addLookupField(fieldNum(DinRetailHierarchyViewLevel, ItemId));
+
+            queryBuildDataSource = query.addDataSource(tableNum(InventItemBarcode));
+            queryBuildDataSource.addSelectionField(fieldNum(InventItemBarcode, ItemBarcode));
+
+            if(ItemId.valueStr() != '')
+            {
+                itemList = strSplit(ItemId.valueStr(), ';');
+
+                itemListEnumerator = itemList.getEnumerator();
+
+                while(itemListEnumerator.moveNext())
+                {
+                    itemListStr = itemListEnumerator.current();
+                    queryBuildDataSource.addRange(fieldNum(InventItemBarcode, ItemId)).value(itemListStr);
+                }
+
+                // msCtrl =  SysLookupMultiSelectCtrl::constructWithQuery(this.formRun(), this, query);
+                SysLookupMultiSelectGrid::lookup(query,this, this, this, conNull());
+
+            }
+        }
+
+    }
+
+    [Control("Button")]
+    class Update
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void clicked()
+        {
+            List lsHierarchy , lsItemId, lsBarcode;
+            ListEnumerator lsEnumHierarchy, lsEnumItemId, lsEnumBarcode;
+            str hierarchyStr, itemIdStr, barcodeStr;
+            InventItemBarcode inventItemBarcode;
+            DinRetailHierarchyViewLevel dinRetailHierarchyViewLevel;
+            date creationDate;
+
+            super();
+
+            delete_from DinBarcodeUtility;
+            DinBarcodeUtility_ds.research(true);
+
+            lsHierarchy = strSplit(Hierarchy.valueStr(), ';');
+            lsItemId = strSplit(ItemId.valueStr(), ';');
+            lsBarcode = strSplit(Barcode.valueStr(), ';');
+
+
+            lsEnumHierarchy = lsHierarchy.getEnumerator();
+
+
+            while(lsEnumHierarchy.moveNext())
+            {
+                hierarchyStr = lsEnumHierarchy.current();
+
+                lsEnumItemId = lsItemId.getEnumerator();
+
+                while(lsEnumItemId.moveNext())
+                {
+                    itemIdStr = lsEnumItemId.current();
+
+                    lsEnumBarcode = lsBarcode.getEnumerator();
+
+                    while(lsEnumBarcode.moveNext())
+                    {
+                        barcodeStr = lsEnumBarcode.current();
+
+                        while select inventItemBarcode
+                            where (inventItemBarcode.itemid == itemIdStr || itemIdStr == 'All')
+                                 && (inventItemBarcode.itembarcode == barcodeStr || barcodeStr == 'All')
+                            join dinRetailHierarchyViewLevel
+                             where dinRetailHierarchyViewLevel.ItemId  == inventItemBarcode.Itemid
+                                && (dinRetailHierarchyViewLevel.Level2 == hierarchyStr || hierarchyStr == 'All')
+                        {
+                            creationDate = DateTimeUtil::date(InventTable::find(inventItemBarcode.itemId).CreatedDateTime);
+
+                            if(creationDate >= StartDate.dateValue() && creationDate <= EndDate.dateValue())
+                            {
+                                
+                                DinBarcodeUtility.itemId      = inventItemBarcode.itemId;
+                                DinBarcodeUtility.itemBarCode = inventItemBarcode.itemBarCode;
+                                DinBarcodeUtility.inventDimId = inventItemBarcode.inventDimId;
+                                DinBarcodeUtility.insert();
+
+                            }
+ 
+                        }
+                         
+                        
+
+                    }
+          
+
+
+                }
+            }
+
+            DinBarcodeUtility_ds.research(true);
+
+        }
+
+    }
+
+    [Control("Button")]
+    class Import
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void clicked()
+        {   
+            super();
+
+            boolean iserror;
+            InventLocationId    InventLocationId;
+            ItemBarCode  itemBarCode;
+            Amount qty;
+            System.IO.Stream stream;
+            ExcelSpreadsheetName sheet;
+            FileUploadBuild fileUpload,fileUploadBuild;
+            DialogGroup dialogUploadGroup;
+            FormBuildControl formBuildControl;
+            boolean IsAnyErrorOccured;
+            InventItemBarcode objInventItemBarcode;
+            InventDim         inventDimLocal;
+
+            Dialog dialog = new Dialog("Excel Import (Item Barcodes)");
+
+            dialogUploadGroup=dialog.addGroup("@SYS54759");
+
+            formBuildControl=dialog.formBuildDesign().control(dialogUploadGroup.name());
+
+            fileUploadBuild=formBuildControl.addControlEx(classStr(fileUpload),"UploadExcel");
+
+            fileUploadBuild.style(FileUploadStyle::MinimalWithFilename);
+
+            fileUploadBuild.fileTypesAccepted(".xlsx");
+
+            FileUploadTemporaryStorageResult  fileUploadResult=   file::GetFileFromUser(classStr(FileUploadTemporaryStorageStrategy));
+
+          
+                if(fileUploadResult!= null && fileUploadResult.getUploadStatus())
+                {
+                    stream=fileUploadResult.openResult();
+
+
+                    using(ExcelPackage  package= new ExcelPackage(stream))
+                    {
+
+                        int rowCount, iterator;
+
+                        package.Load(stream);
+
+                        ExcelWorksheet worksheet= package.get_workbook().get_worksheets().get_Item(1);
+
+                        OfficeOpenXml.ExcelRange range=worksheet.Cells;
+
+                        rowCount = worksheet.Dimension.End.Row - worksheet.Dimension.Start.Row + 1;
+
+                        for(iterator=2;iterator<=rowCount;iterator++)
+                        {
+                        
+                            itemBarCode = range.get_Item(iterator,1).Value;
+                            qty = range.get_Item(iterator,2).Value;
+                            
+                        //Barcode Validations
+                        if(DinImportHelper::IsValidBarcode(ItemBarcode) == NoYes::No)
+                        {
+                            error(strFmt("Row # [%1] found invalid barcode [%2].", rowCount, itemBarCode),"Item Barcode import utility");
+                            IsAnyErrorOccured = NoYes::Yes;
+                        }
+
+                        if(!IsAnyErrorOccured)
+                        {
+                            
+                            select RetailVariantId,itemId from objInventItemBarcode
+                        where objInventItemBarcode.itemBarCode == itemBarCode
+                        join inventDimLocal
+                                where inventDimLocal.inventDimId == objInventItemBarcode.inventDimId;
+
+                            ttsbegin;
+
+                            DinBarcodeUtility.itemId = objInventItemBarcode.itemId;
+                            DinBarcodeUtility.itemBarCode = itemBarCode;
+                            DinBarcodeUtility.qty = qty;
+                            DinBarcodeUtility.inventDimId = inventDimLocal.inventDimId;
+                            DinBarcodeUtility.insert();
+                            ttscommit;
+
+
+
+                        }
+                           
+
+                        }
+
+
+                    }
+
+                }
+            
+       
+    
+            DinBarcodeUtility_ds.research(true);
+    
+        }
+
+    }
+
+    [Control("Button")]
+    class ImportWithItemid
+    {
+        /// <summary>
+        ///
+        /// </summary>
+        public void clicked()
+        {   
+            super();
+    
+            boolean iserror;
+            InventLocationId    InventLocationId;
+            ItemBarCode  itemBarCode2;
+            Amount qty;
+            System.IO.Stream stream;
+            ExcelSpreadsheetName sheet;
+            FileUploadBuild fileUpload,fileUploadBuild;
+            DialogGroup dialogUploadGroup;
+            FormBuildControl formBuildControl;
+            boolean IsAnyErrorOccured;
+            InventItemBarcode objInventItemBarcode2;
+            ItemId            itemId_Id;
+            Color             itemColor;
+            str               itemSize;
+            InventDim         inventDim2;
+     
+            Dialog dialog = new Dialog("Excel Import (Item Barcodes)");
+    
+            dialogUploadGroup=dialog.addGroup("@SYS54759");
+    
+            formBuildControl=dialog.formBuildDesign().control(dialogUploadGroup.name());
+    
+            fileUploadBuild=formBuildControl.addControlEx(classStr(fileUpload),"UploadExcel");
+    
+            fileUploadBuild.style(FileUploadStyle::MinimalWithFilename);
+    
+            fileUploadBuild.fileTypesAccepted(".xlsx");
+    
+            FileUploadTemporaryStorageResult  fileUploadResult=   file::GetFileFromUser(classStr(FileUploadTemporaryStorageStrategy));
+    
+          
+                if(fileUploadResult!= null && fileUploadResult.getUploadStatus())
+                {
+                    stream=fileUploadResult.openResult();
+    
+    
+                    using(ExcelPackage  package= new ExcelPackage(stream))
+                    {
+    
+                        int rowCount, iterator;
+    
+                        package.Load(stream);
+    
+                        ExcelWorksheet worksheet= package.get_workbook().get_worksheets().get_Item(1);
+    
+                        OfficeOpenXml.ExcelRange range=worksheet.Cells;
+    
+                        rowCount = worksheet.Dimension.End.Row - worksheet.Dimension.Start.Row + 1;
+    
+                        for(iterator=2;iterator<=rowCount;iterator++)
+                        {
+                        
+                            itemId_Id = range.get_Item(iterator,1).Value;
+                            itemColor = range.get_Item(iterator,2).Value;
+                            itemSize = range.get_Item(iterator,3).Value;
+                            qty = range.get_Item(iterator,4).Value;
+
+                            itemBarCode2 = DinImportHelper::getItemBarCodeByColorSize(itemId_Id,itemColor,itemSize);
+                            
+                        ////Barcode Validations
+                        //if(DinImportHelper::IsValidBarcode(ItemBarcode) == NoYes::No)
+                        //{
+                        //    error(strFmt("Row # [%1] found invalid barcode [%2].", rowCount, itemBarCode),"Item Barcode import utility");
+                        //    IsAnyErrorOccured = NoYes::Yes;
+                        //}
+                           
+                            select itemId from objInventItemBarcode2
+                        where objInventItemBarcode2.itemBarCode == itemBarCode2
+                        join inventDim2
+                                where inventDim2.inventDimId == objInventItemBarcode2.inventDimId;
+    
+                            ttsbegin;
+    
+                            DinBarcodeUtility.itemId = itemId_Id;
+                        DinBarcodeUtility.itemBarCode = itemBarCode2;
+                            DinBarcodeUtility.qty = qty;
+                            DinBarcodeUtility.inventDimId = inventDim2.inventDimId;
+                            DinBarcodeUtility.insert();
+                            ttscommit;
+                        }
+    
+    
+                    }
+    
+                }
+            
+    
+            
+            DinBarcodeUtility_ds.research(true);
+            
+        }
+
+    }
+
+}

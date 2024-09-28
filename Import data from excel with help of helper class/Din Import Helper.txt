@@ -1,0 +1,81 @@
+class DinImportHelper
+{
+
+    public static EcoResSizeName getSizeName(EcoResItemSizeName _inventSizeId)
+    {
+        EcoResSize                             ecoResSize;
+        EcoResProductMasterSize                ecoResProductMasterSize;
+        EcoResProductMasterDimValueTranslation ecoResProductMasterDimValueTranslation;
+
+        select RecId from ecoResSize
+            where ecoResSize.Name == _inventSizeId
+            join RecId from ecoResProductMasterSize where ecoResProductMasterSize.Size == ecoResSize.RecId
+            join RecId,Name from ecoResProductMasterDimValueTranslation
+                where ecoResProductMasterDimValueTranslation.ProductMasterDimensionValue == ecoResProductMasterSize.RecId;
+
+        return ecoResProductMasterDimValueTranslation.Name;
+        // return _inventSizeId;
+    }
+
+    public static NoYes IsValidBarcode(ItemBarCode _sBarcode)
+    {
+        InventItemBarcode inventitemBarcode;
+        ;
+
+        if (_sBarcode == "")
+        {
+            return NoYes::No;
+        }
+        Select firstonly  inventitemBarcode
+        where inventitemBarcode.itemBarCode == _sBarcode;
+
+        if(!inventitemBarcode || inventitemBarcode.itemId == "")
+        {
+            return NoYes::No;
+        }
+
+        return NoYes::Yes;
+    }
+
+    public static ItemBarCode getItemBarCodeByColorSize(ItemId _itemId, EcoResItemColorName _colorId, EcoResItemSizeName _sizeId)
+    {
+        InventItemBarcode   itemBarcode,itemBarcode1;
+        InventDim           inventDim;
+
+        //select firstonly itemBarCode,itemId,inventDimId from itemBarcode
+        //    where   itemBarcode.itemId == _itemId
+        //    join    Recid,inventDimId,InventColorId,InventSizeId from inventDim
+        //    where   itemBarcode.inventDimId ==   inventDim.inventDimId
+        //    &&      inventDim.InventColorId ==  _colorId
+        //    &&      inventDim.InventSizeId  ==  _sizeId;
+
+        select * from itemBarcode1 //where   itemBarcode1.itemId == _itemId;
+        join inventDim
+                where   inventDim.InventSizeId  ==  _sizeId
+                &&      inventDim.InventColorId ==  _colorId
+                &&      inventDim.inventDimId == itemBarcode1.inventDimId
+                &&      itemBarcode1.itemId == _itemId;
+        {
+            //select firstonly * from inventDim 
+            //    where   itemBarcode.inventDimId ==   inventDim.inventDimId
+            //    join itemBarcode1 where itemBarcode1.itemId == itemBarcode.itemId
+            //&&      inventDim.InventColorId ==  _colorId
+            //&&      inventDim.InventSizeId  ==  _sizeId;
+
+            //select firstonly * from itemBarcode
+            //    where   itemBarcode.itemId == itemBarcode1.itemId
+            //    join    inventDim
+            //    where   itemBarcode.inventDimId ==   inventDim.inventDimId
+            //    &&      inventDim.InventColorId ==  _colorId
+            //    &&      inventDim.InventSizeId  ==  _sizeId;
+
+            //select  * from inventDim 
+            //    where   inventDim.InventSizeId  ==  _sizeId
+            //    &&      inventDim.InventColorId ==  _colorId
+            //    &&      inventDim.inventDimId == itemBarcode1.inventDimId;
+        }
+
+        return itemBarcode1.itemBarCode;
+    }
+
+}
