@@ -1,0 +1,197 @@
+[Form]
+public class DIN_BiltyEntryForm extends FormRun
+{
+
+    [Control("Button")]
+    class PostButton
+    {
+        public void clicked()
+        {
+            DIN_BiltyEntryTmpTable tmpTable;
+            DIN_BiltyEntryTable dinBiltyEntryTable;
+            FormDataSource ds;
+            str BiltyLocation;
+            date BiltyDate;
+            EnumId BiltyEntryType;
+            str BiltyTONumber;
+            str BiltyFromLocation;
+            str BiltyToLocation;
+            str BiltyDepartment;
+            str BiltyNumber;            
+            str BiltyLogisticVendor;
+            str BiltyRemarks;           
+
+            super();
+
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable));
+
+            BiltyLocation = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyLocation));
+            BiltyDate = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyDate));
+            BiltyEntryType = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyEntryType));
+            BiltyTONumber = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyTONumber));
+            BiltyFromLocation = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyFromLocation));
+            BiltyToLocation = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyToLocation));
+            BiltyDepartment = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyDepartment));
+            BiltyNumber = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyNumber));
+            BiltyLogisticVendor = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyLogisticVendor));
+            BiltyRemarks = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyRemarks));
+
+            if (BiltyLocation == "" || BiltyDate == dateNull() || BiltyFromLocation == "" || BiltyEntryType == 0  || BiltyToLocation == "" || BiltyDepartment == "" || BiltyNumber == "")
+            {
+                error("All mandatory fields must be filled in before saving.");
+                return;
+            }
+
+            ttsBegin;
+
+
+            dinBiltyEntryTable.DIN_BiltyLocation        = BiltyLocation;
+            dinBiltyEntryTable.DIN_BiltyDate            = BiltyDate;
+            dinBiltyEntryTable.DIN_BiltyEntryType       = BiltyEntryType;
+            dinBiltyEntryTable.DIN_BiltyTONumber        = BiltyTONumber;
+            dinBiltyEntryTable.DIN_BiltyFromLocation    = BiltyFromLocation;
+            dinBiltyEntryTable.DIN_BiltyToLocation      = BiltyToLocation;
+            dinBiltyEntryTable.DIN_BiltyDepartment      = BiltyDepartment;
+            dinBiltyEntryTable.DIN_BiltyNumber          = BiltyNumber;
+            dinBiltyEntryTable.DIN_BiltyLogisticVendor  = BiltyLogisticVendor;
+            dinBiltyEntryTable.DIN_BiltyRemarks         = BiltyRemarks;
+
+            dinBiltyEntryTable.insert();
+            DIN_BiltyEntryTmpTable.clear();
+            ttsCommit;
+            FormControl biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+            biltyEntryTypeControl.enabled(true);
+            info(strFmt("Bilty Number %1 has been inserted successfully.", BiltyNumber));
+        }
+
+
+
+
+    }
+
+    [Control("Button")]
+    class FormAddLineButtonControl1
+    {
+        //    FormControl biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+        //    DIN_BiltyEntryTmpTable_ds.create(true); 
+        //    biltyEntryTypeControl.enabled(true);
+        //    super();
+        //}
+        public void clicked()
+        {
+            FormDataSource ds;
+            FormControl biltyEntryTypeControl;
+            str lastBiltyLocation; // Variable to hold the last selected location
+
+            super();
+
+            // Get the data source of the form
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable));
+
+            // Check if the cursor is available and retrieve the last selected location
+            if (ds.cursor())
+            {
+                lastBiltyLocation = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyLocation));
+            }
+            else
+            {
+                error("No record selected in the temporary table.");
+                return; // Early exit if there's no record
+            }
+
+            // Create a new line in the temporary table
+            ds.create(true); // Call create() without assigning to tmpTable
+
+            // Set the last selected DIN_BiltyLocation to the new entry
+            ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyLocation)) = lastBiltyLocation;
+
+            // Enable the control for entry type
+            biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+            biltyEntryTypeControl.enabled(true);
+        }
+
+    }
+
+    [Control("ComboBox")]
+    class DIN_BiltyEntryTmpTable_DIN_BiltyEntryType
+    {
+        public boolean modified()
+        {
+            boolean ret;
+            ret = super();
+            
+            DIN_BiltyEntryTypes biltyEntryType = this.selection();
+            FormControl biltyBiltyTOControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyTONumber));
+            FormControl biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+            FormControl biltyFromLocationControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyFromLocation));
+            FormControl biltyToLocationControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyToLocation));
+      
+            if (biltyBiltyTOControl)
+            {               
+                if (biltyEntryType == DIN_BiltyEntryTypes::Inventory)
+                {
+                    biltyBiltyTOControl.enabled(true);
+                    biltyEntryTypeControl.enabled(false);
+                    biltyFromLocationControl.enabled(false);
+                    biltyToLocationControl.enabled(false);
+                }
+                else
+                {
+                    biltyBiltyTOControl.enabled(false);
+                    biltyEntryTypeControl.enabled(false);
+                    biltyFromLocationControl.enabled(true);
+                    biltyToLocationControl.enabled(true);
+                }
+            }
+
+            return ret;
+        }
+
+    }
+
+    [Control("String")]
+    class DIN_BiltyEntryTmpTable_DIN_BiltyTONumber
+    {
+        public boolean modified()
+        {
+            boolean ret;
+            ret = super();
+
+            DIN_BiltyEntryTmpTable tmpTable = DIN_BiltyEntryTmpTable_DS.cursor();
+            str transferId = tmpTable.DIN_BiltyTONumber;
+
+            InventTransferTable inventTransferTable;
+            InventLocation inventLocation;
+        
+            select firstOnly inventTransferTable
+            where inventTransferTable.TransferId == transferId;
+
+            if (inventTransferTable.RecId)
+            {                
+                select firstOnly inventLocation
+                where inventLocation.InventLocationId == inventTransferTable.InventLocationIdFrom
+                    && !(inventLocation.Name Like '*transit*');
+
+                if (inventLocation.RecId)
+                {
+                    tmpTable.DIN_BiltyFromLocation = inventLocation.Name; 
+                }
+               
+                select firstOnly inventLocation
+                where inventLocation.InventLocationId == inventTransferTable.InventLocationIdTo
+                    && !(inventLocation.Name Like '*transit*');
+
+                if (inventLocation.RecId)
+                {
+                    tmpTable.DIN_BiltyToLocation = inventLocation.Name; 
+                }
+                
+                DIN_BiltyEntryTmpTable_DS.refresh();
+            }
+
+            return ret;
+        }
+
+    }
+
+}

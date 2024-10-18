@@ -1,0 +1,196 @@
+[Form]
+public class DIN_BiltyEntryForm extends FormRun
+{
+    [Control("Button")]
+    class PostButton
+    {
+        public void clicked()
+        {
+            FormControl biltyEntryTypeControl;
+            DIN_BiltyEntryTmpTable tmpTable;
+            DIN_BiltyEntryTable dinBiltyEntryTable;
+            FormDataSource ds;
+            str BiltyLocation;
+            date BiltyDate;
+            EnumId BiltyEntryType;
+            str BiltyTONumber;
+            str BiltyFromLocation;
+            str BiltyToLocation;
+            str BiltyDepartment;
+            str BiltyNumber;
+            str BiltyLogisticVendor;
+            str BiltyRemarks;
+
+            super();
+
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable));
+            ds.first();
+            while (ds.cursor())
+            {
+                tmpTable = ds.cursor();
+                
+                BiltyLocation = tmpTable.DIN_BiltyLocation;
+                BiltyDate = tmpTable.DIN_BiltyDate;
+                BiltyEntryType = tmpTable.DIN_BiltyEntryType;
+                BiltyTONumber = tmpTable.DIN_BiltyTONumber;
+                BiltyFromLocation = tmpTable.DIN_BiltyFromLocation;
+                BiltyToLocation = tmpTable.DIN_BiltyToLocation;
+                BiltyDepartment = tmpTable.DIN_BiltyDepartment;
+                BiltyNumber = tmpTable.DIN_BiltyNumber;
+                BiltyLogisticVendor = tmpTable.DIN_BiltyLogisticVendor;
+                BiltyRemarks = tmpTable.DIN_BiltyRemarks;
+
+                if (BiltyLocation == "" || BiltyDate == dateNull() || BiltyFromLocation == "" || BiltyEntryType == 0 || BiltyToLocation == "" || BiltyDepartment == "" || BiltyNumber == "")
+                {
+                    error("All mandatory fields must be filled in before saving.");
+                    return;
+                }
+               
+                ttsBegin;
+                
+                dinBiltyEntryTable.clear();
+                dinBiltyEntryTable.DIN_BiltyLocation        = BiltyLocation;
+                dinBiltyEntryTable.DIN_BiltyDate            = BiltyDate;
+                dinBiltyEntryTable.DIN_BiltyEntryType       = BiltyEntryType;
+                dinBiltyEntryTable.DIN_BiltyTONumber        = BiltyTONumber;
+                dinBiltyEntryTable.DIN_BiltyFromLocation    = BiltyFromLocation;
+                dinBiltyEntryTable.DIN_BiltyToLocation      = BiltyToLocation;
+                dinBiltyEntryTable.DIN_BiltyDepartment      = BiltyDepartment;
+                dinBiltyEntryTable.DIN_BiltyNumber          = BiltyNumber;
+                dinBiltyEntryTable.DIN_BiltyLogisticVendor  = BiltyLogisticVendor;
+                dinBiltyEntryTable.DIN_BiltyRemarks         = BiltyRemarks;
+               
+                dinBiltyEntryTable.insert();              
+                tmpTable.delete();               
+                ttsCommit;                
+                ds.next();
+            }
+
+            info("All records have been successfully inserted.");          
+            tmpTable.delete();
+            ds.research(true);           
+            biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+            biltyEntryTypeControl.enabled(true);
+        }
+
+    }
+
+    [Control("Button")]
+    class FormAddLineButtonControl1
+    {
+        //    FormControl biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+        //    DIN_BiltyEntryTmpTable_ds.create(true);
+        //    biltyEntryTypeControl.enabled(true);
+        //    super();
+        //}
+        public void clicked()
+        {
+            FormDataSource ds;
+            FormControl biltyEntryTypeControl;
+            str lastBiltyLocation;
+
+            super();
+           
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable));
+            
+            if (ds.cursor())
+            {
+                lastBiltyLocation = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyLocation));
+            }
+            else
+            {
+                error("No record selected in the temporary table.");
+                return;
+            }
+                       
+            ds.create(true);           
+            ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyLocation)) = lastBiltyLocation;            
+            biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+            biltyEntryTypeControl.enabled(true);
+        }
+
+    }
+
+    [Control("ComboBox")]
+    class DIN_BiltyEntryTmpTable_DIN_BiltyEntryType
+    {
+        public boolean modified()
+        {
+            boolean ret;
+            ret = super();
+
+            DIN_BiltyEntryTypes biltyEntryType = this.selection();
+            FormControl biltyBiltyTOControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyTONumber));
+            FormControl biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+            FormControl biltyFromLocationControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyFromLocation));
+            FormControl biltyToLocationControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyToLocation));
+
+            if (biltyBiltyTOControl)
+            {
+                if (biltyEntryType == DIN_BiltyEntryTypes::Inventory)
+                {
+                    biltyBiltyTOControl.enabled(true);
+                    biltyEntryTypeControl.enabled(false);
+                    biltyFromLocationControl.enabled(false);
+                    biltyToLocationControl.enabled(false);
+                }
+                else
+                {
+                    biltyBiltyTOControl.enabled(false);
+                    biltyEntryTypeControl.enabled(false);
+                    biltyFromLocationControl.enabled(true);
+                    biltyToLocationControl.enabled(true);
+                }
+            }
+
+            return ret;
+        }
+
+    }
+
+    [Control("String")]
+    class DIN_BiltyEntryTmpTable_DIN_BiltyTONumber
+    {
+        public boolean modified()
+        {
+            boolean ret;
+            ret = super();
+
+            DIN_BiltyEntryTmpTable tmpTable = DIN_BiltyEntryTmpTable_DS.cursor();
+            str transferId = tmpTable.DIN_BiltyTONumber;
+
+            InventTransferTable inventTransferTable;
+            InventLocation inventLocation;
+
+            select firstOnly inventTransferTable
+            where inventTransferTable.TransferId == transferId;
+
+            if (inventTransferTable.RecId)
+            {
+                select firstOnly inventLocation
+                where inventLocation.InventLocationId == inventTransferTable.InventLocationIdFrom
+                    && !(inventLocation.Name Like '*transit*');
+
+                if (inventLocation.RecId)
+                {
+                    tmpTable.DIN_BiltyFromLocation = inventLocation.Name;
+                }
+
+                select firstOnly inventLocation
+                where inventLocation.InventLocationId == inventTransferTable.InventLocationIdTo
+                    && !(inventLocation.Name Like '*transit*');
+
+                if (inventLocation.RecId)
+                {
+                    tmpTable.DIN_BiltyToLocation = inventLocation.Name;
+                }
+
+                DIN_BiltyEntryTmpTable_DS.refresh();
+            }
+
+            return ret;
+        }
+
+    }
+
+}

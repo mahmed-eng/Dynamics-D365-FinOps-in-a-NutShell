@@ -1,0 +1,71 @@
+[Form]
+public class DIN_BiltyEntryListPage extends FormRun
+{
+    [Control("Button")]
+    class Update
+    {
+        public void clicked()
+        {
+            Query query;
+            QueryBuildDataSource qbds;
+            QueryBuildRange qbr;
+            QueryRun queryRun;
+            DIN_BiltyEntryTable dinBiltyEntryTable;
+
+            date startDateValue, endDateValue;
+            FormDateControl startDateControl, endDateControl;
+            int startDateControlId, endDateControlId;
+
+            startDateControlId = element.controlId(formControlStr(DIN_BiltyEntryListPage, StartDate));
+            endDateControlId = element.controlId(formControlStr(DIN_BiltyEntryListPage, EndDate));
+
+            startDateControl = element.control(startDateControlId) as FormDateControl;
+            endDateControl = element.control(endDateControlId) as FormDateControl;
+
+            startDateValue = startDateControl.dateValue();
+            endDateValue = endDateControl.dateValue();
+
+            if (!startDateValue || !endDateValue)
+            {
+                warning("Please select both Start Date and End Date.");
+                return;
+            }
+
+            delete_from DIN_BiltyEntryListPageTmpTable;
+
+            DIN_BiltyEntryListPageTmpTable_ds.research(true); 
+
+            query = new Query();
+            qbds = query.addDataSource(tableNum(DIN_BiltyEntryTable));
+
+            qbr = qbds.addRange(fieldNum(DIN_BiltyEntryTable, DIN_BILTYDATE));
+            qbr.value(SysQuery::range(startDateValue, endDateValue));
+
+            queryRun = new QueryRun(query);      
+            while (queryRun.next())
+            {
+                dinBiltyEntryTable = queryRun.get(tableNum(DIN_BiltyEntryTable));
+             
+                DIN_BiltyEntryListPageTmpTable.clear();
+                DIN_BiltyEntryListPageTmpTable.initValue(); 
+
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYLOCATION = dinBiltyEntryTable.DIN_BILTYLOCATION;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYDATE = dinBiltyEntryTable.DIN_BILTYDATE;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYENTRYTYPE = dinBiltyEntryTable.DIN_BILTYENTRYTYPE;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYTONUMBER = dinBiltyEntryTable.DIN_BILTYTONUMBER;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYFROMLOCATION = dinBiltyEntryTable.DIN_BILTYFROMLOCATION;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYTOLOCATION = dinBiltyEntryTable.DIN_BILTYTOLOCATION;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYNUMBER = dinBiltyEntryTable.DIN_BILTYNUMBER;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYDEPARTMENT = dinBiltyEntryTable.DIN_BILTYDEPARTMENT;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYLOGISTICVENDOR = dinBiltyEntryTable.DIN_BILTYLOGISTICVENDOR;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYREMARKS = dinBiltyEntryTable.DIN_BILTYREMARKS;
+
+                DIN_BiltyEntryListPageTmpTable.insert();
+            }
+
+            DIN_BiltyEntryListPageTmpTable_ds.research(true);
+        }
+
+    }
+
+}
