@@ -1,0 +1,86 @@
+[Form]
+public class DIN_BiltyEntryListPage extends FormRun
+{
+    // Button control class that handles the logic for when the 'Update' button is clicked.
+    [Control("Button")]
+    class Update
+    {
+        public void clicked()
+        {
+            // Declare variables for query, query data source, and query range
+            Query query;
+            QueryBuildDataSource qbds;
+            QueryBuildRange qbr;
+            QueryRun queryRun;
+            DIN_BiltyEntryTable dinBiltyEntryTable;
+
+            // Variables to store selected start and end dates from the form
+            date startDateValue, endDateValue;
+            FormDateControl startDateControl, endDateControl;
+            int startDateControlId, endDateControlId;
+
+            // Get the control IDs of the Start Date and End Date fields on the form
+            startDateControlId = element.controlId(formControlStr(DIN_BiltyEntryListPage, StartDate));
+            endDateControlId = element.controlId(formControlStr(DIN_BiltyEntryListPage, EndDate));
+
+            // Get references to the actual form controls for Start Date and End Date
+            startDateControl = element.control(startDateControlId) as FormDateControl;
+            endDateControl = element.control(endDateControlId) as FormDateControl;
+
+            // Get the selected date values from the form controls
+            startDateValue = startDateControl.dateValue();
+            endDateValue = endDateControl.dateValue();
+
+            // Validate that both start and end dates have been selected
+            if (!startDateValue || !endDateValue)
+            {
+                // Show a warning message if one or both dates are not selected
+                warning("Please select both Start Date and End Date.");
+                return;  // Exit the method if validation fails
+            }
+
+            // Clear the temporary table before inserting new data
+            delete_from DIN_BiltyEntryListPageTmpTable;
+
+            // Refresh the form data source
+            DIN_BiltyEntryListPageTmpTable_ds.research(true); 
+
+            // Create a new query to fetch records from the DIN_BiltyEntryTable
+            query = new Query();
+            qbds = query.addDataSource(tableNum(DIN_BiltyEntryTable));  // Add the data source (DIN_BiltyEntryTable)
+
+            // Add a date range filter to the query based on the selected Start and End Dates
+            qbr = qbds.addRange(fieldNum(DIN_BiltyEntryTable, DIN_BILTYDATE));
+            qbr.value(SysQuery::range(startDateValue, endDateValue));
+
+            // Execute the query to get the filtered records
+            queryRun = new QueryRun(query);      
+            while (queryRun.next())  // Iterate over each record in the result set
+            {
+                dinBiltyEntryTable = queryRun.get(tableNum(DIN_BiltyEntryTable));  // Get the current record
+
+                // Clear and initialize a new record in the temporary table
+                DIN_BiltyEntryListPageTmpTable.clear();
+                DIN_BiltyEntryListPageTmpTable.initValue(); 
+
+                // Map fields from the original table to the temporary table
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYLOCATION = dinBiltyEntryTable.DIN_BILTYLOCATION;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYDATE = dinBiltyEntryTable.DIN_BILTYDATE;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYENTRYTYPE = dinBiltyEntryTable.DIN_BILTYENTRYTYPE;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYTONUMBER = dinBiltyEntryTable.DIN_BILTYTONUMBER;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYFROMLOCATION = dinBiltyEntryTable.DIN_BILTYFROMLOCATION;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYTOLOCATION = dinBiltyEntryTable.DIN_BILTYTOLOCATION;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYNUMBER = dinBiltyEntryTable.DIN_BILTYNUMBER;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYDEPARTMENT = dinBiltyEntryTable.DIN_BILTYDEPARTMENT;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYLOGISTICVENDOR = dinBiltyEntryTable.DIN_BILTYLOGISTICVENDOR;
+                DIN_BiltyEntryListPageTmpTable.DIN_BILTYREMARKS = dinBiltyEntryTable.DIN_BILTYREMARKS;
+
+                // Insert the record into the temporary table
+                DIN_BiltyEntryListPageTmpTable.insert();
+            }
+
+            // Refresh the form data source to display the updated records in the UI
+            DIN_BiltyEntryListPageTmpTable_ds.research(true);
+        }
+    }
+}
