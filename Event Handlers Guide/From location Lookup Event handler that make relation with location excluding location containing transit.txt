@@ -1,0 +1,34 @@
+public final class DIN_FromLocationLookupEventHandler
+{
+    // Event handler for the lookup event on the DIN_BiltyEntryTmpTable_DIN_BiltyFromLocation control
+    [FormControlEventHandler(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyFromLocation), FormControlEventType::Lookup)]
+    public static void DIN_BiltyEntryTmpTable_DIN_BiltyFromLocation_OnLookup(FormControl sender, FormControlEventArgs e)
+    {
+        // Declare variables for the SysTableLookup, Query, and QueryBuild components
+        SysTableLookup sysTableLookup;
+        Query query;
+        QueryBuildDataSource qbds;
+        QueryBuildRange queryBuildRange;
+
+        // Initialize the SysTableLookup object for the InventLocation table, linked to the sender control
+        sysTableLookup = SysTableLookup::newParameters(tableNum(InventLocation), sender);
+
+        // Add fields to be displayed in the lookup dialog
+        sysTableLookup.addLookupField(fieldNum(InventLocation, InventLocationId)); // Add the InventLocationId field for selection
+        sysTableLookup.addLookupField(fieldNum(InventLocation, Name)); // Add the Name field for the location description
+
+        // Create a new Query object to define the data source for the lookup
+        query = new Query();
+        qbds = query.addDataSource(tableNum(InventLocation)); // Specify the data source as the InventLocation table
+
+        // Add a range (filter) to exclude locations containing the word "Transit" in their name
+        queryBuildRange = qbds.addRange(fieldNum(InventLocation, Name)); // Add a range on the Name field
+        queryBuildRange.value('!*Transit*'); // Exclude any locations with "Transit" in their name using wildcard
+
+        // Pass the defined query to the SysTableLookup to filter the lookup results
+        sysTableLookup.parmQuery(query);
+
+        // Perform the lookup operation, displaying the filtered results to the user
+        sysTableLookup.performFormLookup();
+    }
+}
