@@ -1,1 +1,73 @@
-This is for testing
+public class DIN_ITAssetsBarcodeUtilityControllerClass extends SrsReportRunController implements BatchRetryable
+{
+    // Main entry point for the controller
+    static void main(Args _args)
+    {
+        // Instantiate the controller
+        DIN_ITAssetsBarcodeUtilityControllerClass controller;
+        controller = new DIN_ITAssetsBarcodeUtilityControllerClass();
+
+        // Set the arguments and display dialog
+        controller.parmArgs(_args);       
+        controller.parmShowDialog(true);
+        
+        // Set the report name to be run
+        controller.parmReportName(ssrsReportStr(Din_ITAssetsBarcodeUtilityReport, PrecisionDesign1));
+        
+        // Start the report operation
+        controller.startOperation();
+    }
+
+    // Method to modify the contract before prompting the user
+    protected void prePromptModifyContract()
+    {
+        // Declare necessary contract and table variables
+        DIN_ITAssetsBarcodeUtilityContractClass dinITAssetsBarcodeUtilityContractClass;
+        Object basecontract;
+        SrsReportDataContract datacontract;
+        PurchTable purchTable;
+        PurchLine purchLine;
+        DIN_BarcodeItemInventoryTable dinBarcodeItemInventoryTable, dinBarcodeItemInventoryTableLocal;
+        FormRun fr;
+
+        // List to hold item barcodes
+        List itembarcodeList = new List(Types::String);
+     
+        // Check if arguments and record are valid
+        if (this.parmArgs() && this.parmArgs().record())
+        {
+            // Get the form run instance
+            fr = this.parmArgs().caller();
+            
+            // Access the data source of the form
+            FormDataSource DIN_BarcodeItemInventoryTable_ds = fr.dataSource(formDataSourceStr(DIN_BarcodeItemInventoryForm, DIN_BarcodeItemInventoryTable)) as FormDataSource;
+            
+            // Retrieve the report data contract
+            datacontract = this.parmReportContract();
+            basecontract = datacontract.parmRdpContract();
+
+            // Check if the base contract exists
+            if (basecontract)
+                dinITAssetsBarcodeUtilityContractClass = basecontract; // Use existing contract
+            else
+            {
+                // Create a new contract if none exists
+                dinITAssetsBarcodeUtilityContractClass = new DIN_ITAssetsBarcodeUtilityContractClass();
+                datacontract.parmRdpContract();
+            }
+
+            // Get the first record from the data source
+            dinBarcodeItemInventoryTableLocal = DIN_BarcodeItemInventoryTable_ds.getFirst(true);
+
+            // Loop through the records and collect item barcodes
+            while (dinBarcodeItemInventoryTableLocal)
+            {
+                itembarcodeList.addEnd(dinBarcodeItemInventoryTableLocal.NTI_ItemBarcode); // Add barcode to the list
+                dinBarcodeItemInventoryTableLocal = DIN_BarcodeItemInventoryTable_ds.getNext(); // Move to the next record
+            }
+            
+            // Set the collected item barcodes to the contract
+            dinITAssetsBarcodeUtilityContractClass.parmItemBarcode(itembarcodeList);                   
+        }
+    }
+}
