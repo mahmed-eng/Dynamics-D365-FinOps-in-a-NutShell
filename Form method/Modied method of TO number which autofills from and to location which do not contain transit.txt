@@ -1,0 +1,54 @@
+[Control("String")]
+class DIN_BiltyEntryTmpTable_DIN_BiltyTONumber
+{
+    // Method to check if the current record has been modified
+    public boolean modified()
+    {
+        boolean ret;
+        // Call the super method to retain any base functionality
+        ret = super();
+
+        // Get the current cursor for the DIN_BiltyEntryTmpTable data source
+        DIN_BiltyEntryTmpTable tmpTable = DIN_BiltyEntryTmpTable_DS.cursor();
+        str transferId = tmpTable.DIN_BiltyTONumber; // Store the transfer ID from the temporary table
+
+        InventTransferTable inventTransferTable; // Declare variable for InventTransferTable
+        InventLocation inventLocation; // Declare variable for InventLocation
+
+        // Query to find the first record in InventTransferTable matching the transfer ID
+        select firstOnly inventTransferTable
+        where inventTransferTable.TransferId == transferId;
+
+        // Check if a record was found
+        if (inventTransferTable.RecId)
+        {
+            // Query to find the originating location for the transfer
+            select firstOnly inventLocation
+            where inventLocation.InventLocationId == inventTransferTable.InventLocationIdFrom
+                && !(inventLocation.Name Like '*transit*'); // Exclude locations with "transit" in the name
+
+            // If a valid location record is found, set the FromLocation field in the temporary table
+            if (inventLocation.RecId)
+            {
+                tmpTable.DIN_BiltyFromLocation = inventLocation.Name; // Assign the name of the location
+            }
+
+            // Query to find the destination location for the transfer
+            select firstOnly inventLocation
+            where inventLocation.InventLocationId == inventTransferTable.InventLocationIdTo
+                && !(inventLocation.Name Like '*transit*'); // Exclude locations with "transit" in the name
+
+            // If a valid location record is found, set the ToLocation field in the temporary table
+            if (inventLocation.RecId)
+            {
+                tmpTable.DIN_BiltyToLocation = inventLocation.Name; // Assign the name of the location
+            }
+
+            // Refresh the data source to reflect changes
+            DIN_BiltyEntryTmpTable_DS.refresh();
+        }
+
+        // Return the result of the modified check
+        return ret;
+    }
+}

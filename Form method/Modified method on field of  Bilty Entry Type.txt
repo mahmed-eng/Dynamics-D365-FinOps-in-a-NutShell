@@ -1,0 +1,46 @@
+[Control("ComboBox")]
+class DIN_BiltyEntryTmpTable_DIN_BiltyEntryType
+{
+    // Method to check if the current record has been modified
+    public boolean modified()
+    {
+        boolean ret;
+        // Call the super method to retain any base functionality
+        ret = super();
+
+        // Retrieve the selected Bilty Entry Type from the ComboBox
+        DIN_BiltyEntryTypes biltyEntryType = this.selection();
+
+        // Get references to various controls on the form
+        FormControl biltyBiltyTOControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyTONumber));
+        FormControl biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+        FormControl biltyFromLocationControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyFromLocation));
+        FormControl biltyToLocationControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyToLocation));
+
+        // Check if the Bilty TO control is available
+        if (biltyBiltyTOControl)
+        {
+            // If the selected entry type is Inventory
+            if (biltyEntryType == DIN_BiltyEntryTypes::Inventory)
+            {
+                // Enable the Bilty TO control and disable the other controls
+                biltyBiltyTOControl.enabled(true); // Allow user to interact with Bilty TO
+                biltyEntryTypeControl.enabled(false); // Disable the Entry Type control
+                biltyFromLocationControl.enabled(false); // Disable the From Location control
+                biltyToLocationControl.enabled(false); // Disable the To Location control
+            }
+            else
+            {
+                // If the entry type is not Inventory
+                // Disable the Bilty TO control and enable the other controls
+                biltyBiltyTOControl.enabled(false); // Prevent user interaction with Bilty TO
+                biltyEntryTypeControl.enabled(false); // Disable the Entry Type control
+                biltyFromLocationControl.enabled(true); // Allow user to interact with From Location
+                biltyToLocationControl.enabled(true); // Allow user to interact with To Location
+            }
+        }
+
+        // Return the result of the modified check
+        return ret;
+    }
+}
