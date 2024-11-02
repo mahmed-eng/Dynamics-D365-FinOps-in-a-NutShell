@@ -1,0 +1,30 @@
+[DataContractAttribute] // Indicates that this class can be serialized and deserialized by WCF services
+class DIN_ITAssetsBarcodeUtilityContractClass
+{
+    // Private field to store the list of item barcodes
+    List itemBarcode;   
+
+    [
+        // Data member attribute for the parameterized method, specifies the name of the member in the data contract
+        DataMemberAttribute(identifierStr(InventTransferStatus)),
+        
+        // Label attribute for the user interface, providing a name for the barcode field
+        SysOperationLabelAttribute("barcode"),
+        
+        // Help text attribute for providing a tooltip or additional information about the barcode field
+        SysOperationHelpTextAttribute("barcode"),
+        
+        // Display order attribute for determining the order of appearance in the user interface
+        SysOperationDisplayOrderAttribute("1"),
+        
+        // Attribute indicating the collection type for AIF (Application Integration Framework)
+        AifCollectionTypeAttribute(identifierStr(ItemBarCode), Types::String)
+    ]
+    // Public method to get or set the list of item barcodes
+    public List parmItemBarcode(List _itemBarcode = itemBarcode)
+    {
+        // Set the private field itemBarcode to the value provided, or return the current value if no parameter is passed
+        itemBarcode = _itemBarcode;
+        return itemBarcode; // Return the list of item barcodes
+    }
+}
