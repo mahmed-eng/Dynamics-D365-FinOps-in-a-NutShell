@@ -1,0 +1,84 @@
+[Control("Button")]
+class Update
+{
+    // Method that is triggered when the button is clicked
+    public void clicked()
+    {
+        // Declare variables for query and data sources
+        Query query;
+        QueryBuildDataSource qbds;
+        QueryBuildRange qbr;
+        QueryRun queryRun;
+        DIN_BiltyEntryTable dinBiltyEntryTable;
+
+        // Declare variables for start and end dates
+        date startDateValue, endDateValue;
+        FormDateControl startDateControl, endDateControl;
+        int startDateControlId, endDateControlId;
+
+        // Get control IDs for start and end date controls
+        startDateControlId = element.controlId(formControlStr(DIN_BiltyEntryListPage, StartDate));
+        endDateControlId = element.controlId(formControlStr(DIN_BiltyEntryListPage, EndDate));
+
+        // Cast controls to FormDateControl
+        startDateControl = element.control(startDateControlId) as FormDateControl;
+        endDateControl = element.control(endDateControlId) as FormDateControl;
+
+        // Retrieve the selected date values from the controls
+        startDateValue = startDateControl.dateValue();
+        endDateValue = endDateControl.dateValue();
+
+        // Check if both start and end dates are selected
+        if (!startDateValue || !endDateValue)
+        {
+            warning("Please select both Start Date and End Date."); // Show warning if dates are not selected
+            return; // Exit the method if dates are not provided
+        }
+
+        // Clear the temporary table for the updated entries
+        delete_from DIN_BiltyEntryListPageTmpTable;
+
+        // Refresh the data source of the temporary table
+        DIN_BiltyEntryListPageTmpTable_ds.research(true); 
+
+        // Create a new query to fetch records from DIN_BiltyEntryTable
+        query = new Query();
+        qbds = query.addDataSource(tableNum(DIN_BiltyEntryTable));
+
+        // Add a range to filter records based on DIN_BILTYDATE
+        qbr = qbds.addRange(fieldNum(DIN_BiltyEntryTable, DIN_BILTYDATE));
+        qbr.value(SysQuery::range(startDateValue, endDateValue)); // Set the range with start and end dates
+
+        // Execute the query
+        queryRun = new QueryRun(query);      
+
+        // Iterate through the results of the query
+        while (queryRun.next())
+        {
+            // Get the current record from the query result
+            dinBiltyEntryTable = queryRun.get(tableNum(DIN_BiltyEntryTable));
+             
+            // Clear and initialize a new record for the temporary table
+            DIN_BiltyEntryListPageTmpTable.clear();
+            DIN_BiltyEntryListPageTmpTable.initValue(); 
+
+            // Copy values from the source table to the temporary table
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYLOCATION = dinBiltyEntryTable.DIN_BILTYLOCATION;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYDATE = dinBiltyEntryTable.DIN_BILTYDATE;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYENTRYTYPE = dinBiltyEntryTable.DIN_BILTYENTRYTYPE;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYTONUMBER = dinBiltyEntryTable.DIN_BILTYTONUMBER;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYFROMLOCATION = dinBiltyEntryTable.DIN_BILTYFROMLOCATION;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYTOLOCATION = dinBiltyEntryTable.DIN_BILTYTOLOCATION;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYNUMBER = dinBiltyEntryTable.DIN_BILTYNUMBER;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYDEPARTMENT = dinBiltyEntryTable.DIN_BILTYDEPARTMENT;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYLOGISTICVENDOR = dinBiltyEntryTable.DIN_BILTYLOGISTICVENDOR;
+            DIN_BiltyEntryListPageTmpTable.DIN_BILTYREMARKS = dinBiltyEntryTable.DIN_BILTYREMARKS;
+
+            // Insert the new record into the temporary table
+            DIN_BiltyEntryListPageTmpTable.insert();
+        }
+
+        // Refresh the data source of the temporary table again to reflect the changes
+        DIN_BiltyEntryListPageTmpTable_ds.research(true);
+    }
+}
