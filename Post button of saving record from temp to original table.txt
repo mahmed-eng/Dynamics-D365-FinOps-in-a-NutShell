@@ -1,0 +1,95 @@
+[Control("Button")]
+class PostButton
+{
+    // Method triggered when the button is clicked
+    public void clicked()
+    {
+        // Declare variables for form controls and data
+        FormControl biltyEntryTypeControl; // Control for Bilty Entry Type
+        DIN_BiltyEntryTmpTable tmpTable; // Temporary table to hold Bilty entry data
+        DIN_BiltyEntryTable dinBiltyEntryTable; // Main table to store Bilty entry records
+        FormDataSource ds; // Data source for the form
+        str BiltyLocation; // Variable for storing Bilty location
+        date BiltyDate; // Variable for storing Bilty date
+        EnumId BiltyEntryType; // Variable for storing Bilty entry type
+        str BiltyTONumber; // Variable for storing Bilty TO number
+        str BiltyFromLocation; // Variable for storing From location
+        str BiltyToLocation; // Variable for storing To location
+        str BiltyDepartment; // Variable for storing department
+        str BiltyNumber; // Variable for storing Bilty number
+        str BiltyLogisticVendor; // Variable for storing logistic vendor
+        str BiltyRemarks; // Variable for storing remarks
+
+        // Call the base class clicked method
+        super();
+
+        // Get the data source for the form
+        ds = this.formRun().dataSource(formDataSourceStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable));
+        ds.first(); // Move to the first record in the data source
+
+        // Loop through each record in the data source
+        while (ds.cursor())
+        {
+            // Get the current cursor record
+            tmpTable = ds.cursor();
+            
+            // Extract values from the temporary table
+            BiltyLocation = tmpTable.DIN_BiltyLocation;
+            BiltyDate = tmpTable.DIN_BiltyDate;
+            BiltyEntryType = tmpTable.DIN_BiltyEntryType;
+            BiltyTONumber = tmpTable.DIN_BiltyTONumber;
+            BiltyFromLocation = tmpTable.DIN_BiltyFromLocation;
+            BiltyToLocation = tmpTable.DIN_BiltyToLocation;
+            BiltyDepartment = tmpTable.DIN_BiltyDepartment;
+            BiltyNumber = tmpTable.DIN_BiltyNumber;
+            BiltyLogisticVendor = tmpTable.DIN_BiltyLogisticVendor;
+            BiltyRemarks = tmpTable.DIN_BiltyRemarks;
+
+            // Check if any mandatory fields are empty or not set
+            if (BiltyLocation == "" || BiltyDate == dateNull() || BiltyFromLocation == "" || 
+                BiltyEntryType == 0 || BiltyToLocation == "" || BiltyDepartment == "" || 
+                BiltyNumber == "")
+            {
+                // Display an error message if mandatory fields are missing
+                error("All mandatory fields must be filled in before saving.");
+                return; // Exit the method to prevent further processing
+            }
+
+            // Begin a transaction for data insertion
+            ttsBegin;
+
+            // Clear the main entry table before inserting a new record
+            dinBiltyEntryTable.clear();
+            // Assign values to the main table from the temporary table
+            dinBiltyEntryTable.DIN_BiltyLocation        = BiltyLocation;
+            dinBiltyEntryTable.DIN_BiltyDate            = BiltyDate;
+            dinBiltyEntryTable.DIN_BiltyEntryType       = BiltyEntryType;
+            dinBiltyEntryTable.DIN_BiltyTONumber        = BiltyTONumber;
+            dinBiltyEntryTable.DIN_BiltyFromLocation    = BiltyFromLocation;
+            dinBiltyEntryTable.DIN_BiltyToLocation      = BiltyToLocation;
+            dinBiltyEntryTable.DIN_BiltyDepartment      = BiltyDepartment;
+            dinBiltyEntryTable.DIN_BiltyNumber          = BiltyNumber;
+            dinBiltyEntryTable.DIN_BiltyLogisticVendor  = BiltyLogisticVendor;
+            dinBiltyEntryTable.DIN_BiltyRemarks         = BiltyRemarks;
+           
+            // Insert the new record into the main entry table
+            dinBiltyEntryTable.insert();              
+            // Delete the temporary record from the data source
+            tmpTable.delete();               
+            // Commit the transaction
+            ttsCommit;                
+            // Move to the next record in the data source
+            ds.next();
+        }
+
+        // Display a success message after all records have been processed
+        info("All records have been successfully inserted.");          
+        // Delete the last temporary record after processing
+        tmpTable.delete();
+        // Refresh the data source to reflect changes
+        ds.research(true);           
+        // Enable the Bilty Entry Type control on the form
+        biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+        biltyEntryTypeControl.enabled(true);
+    }
+}
