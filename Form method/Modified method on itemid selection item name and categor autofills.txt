@@ -1,0 +1,38 @@
+public boolean modified()
+{
+    // Declare a return variable for the method
+    boolean ret;
+
+    // Call the base class's modified method
+    super();
+
+    // Cast 'this' control to a FormStringControl to work with the specific control type
+    FormStringControl storeIdControl = this as FormStringControl;
+
+    // Retrieve the form data source for DIN_BarcodeItemInventoryTable from the form
+    FormDataSource DIN_BarcodeItemInventoryTableDS = this.formRun().dataSource(1);
+
+    // Declare a variable to hold records from DIN_ItemMasterDetailTable
+    DIN_ItemMasterDetailTable din_ItemMasterDetailTable;
+
+    // Retrieve the value entered in the store ID control
+    str itemId = storeIdControl.valueStr();
+
+    // Select the first record matching the item ID and retrieve the item name and type
+    select firstonly NTI_ItemName, NTI_ItemType from din_ItemMasterDetailTable
+    where din_ItemMasterDetailTable.NTI_ItemID == itemId;
+
+    // Check if a record was found (using the RecId as a check)
+    if (din_ItemMasterDetailTable.RecId)
+    {
+        // Assign the retrieved item name and item type to the corresponding fields in the form data source
+        DIN_BarcodeItemInventoryTable.NTI_ItemName = din_ItemMasterDetailTable.NTI_ItemName;
+        DIN_BarcodeItemInventoryTable.NTI_ItemCategory = din_ItemMasterDetailTable.NTI_ItemType;
+    }
+
+    // Call the base class's modified method again to ensure any additional logic is run and set the return value
+    ret = super();
+
+    // Return the result of the modified method
+    return ret;
+}
