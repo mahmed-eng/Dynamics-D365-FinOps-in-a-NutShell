@@ -1,0 +1,43 @@
+[Control("Button")]
+class FormAddLineButtonControl1
+{
+    // Method executed when the button is clicked
+    public void clicked()
+    {
+        // Declare variables for the form data source and controls
+        FormDataSource ds;
+        FormControl biltyEntryTypeControl;
+        str lastBiltyLocation;
+
+        // Call the base method for the button click
+        super();
+       
+        // Get the data source for the DIN_BiltyEntryForm
+        ds = this.formRun().dataSource(formDataSourceStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable));
+        
+        // Check if there is a selected record in the temporary table
+        if (ds.cursor())
+        {
+            // Retrieve the last Bilty Location from the selected record
+            lastBiltyLocation = ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyLocation));
+        }
+        else
+        {
+            // Display an error if no record is selected
+            error("No record selected in the temporary table.");
+            return; // Exit the method if no record is found
+        }
+                   
+        // Create a new record in the data source
+        ds.create(true);           
+
+        // Set the Bilty Location of the new record to the last retrieved location
+        ds.cursor().(fieldNum(DIN_BiltyEntryTmpTable, DIN_BiltyLocation)) = lastBiltyLocation;            
+
+        // Get the control for the Bilty Entry Type field
+        biltyEntryTypeControl = this.formRun().design().controlName(formControlStr(DIN_BiltyEntryForm, DIN_BiltyEntryTmpTable_DIN_BiltyEntryType));
+        
+        // Enable the Bilty Entry Type control for user interaction
+        biltyEntryTypeControl.enabled(true);
+    }
+}
