@@ -1,0 +1,30 @@
+public void lookup()
+{
+    // Declare a SysTableLookup object to handle the lookup functionality
+    SysTableLookup sysTableLookup;
+
+    // Declare a Query object for defining the lookup criteria
+    Query query;
+
+    // Declare a QueryBuildDataSource object to add a data source to the query
+    QueryBuildDataSource qbds;
+
+    // Initialize the SysTableLookup object with the table for lookup and the current form control
+    sysTableLookup = SysTableLookup::newParameters(tableNum(DIN_ItemMasterDetailTable), this);
+
+    // Create a new query object
+    query = new Query();
+
+    // Add the DIN_ItemMasterDetailTable as the main data source for the query
+    qbds = query.addDataSource(tableNum(DIN_ItemMasterDetailTable));
+
+    // Add the fields to be shown in the lookup form (e.g., NTI_ItemID and NTI_ItemName)
+    sysTableLookup.addLookupfield(fieldNum(DIN_ItemMasterDetailTable, NTI_ItemID));
+    sysTableLookup.addLookupfield(fieldNum(DIN_ItemMasterDetailTable, NTI_ItemName));
+
+    // Associate the query with the SysTableLookup object
+    sysTableLookup.parmQuery(query);
+
+    // Execute the lookup form to display results based on the query
+    sysTableLookup.performFormLookup();
+}
