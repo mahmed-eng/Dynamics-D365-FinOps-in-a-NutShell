@@ -1,0 +1,52 @@
+[FormControlEventHandler(formControlStr(DIN_BarcodeItemInventoryForm, DIN_BarcodeItemInventoryTable_NTI_SerialNumber), FormControlEventType::Lookup)]
+public static void DIN_BarcodeItemInventoryTable_NTI_SerialNumber_OnLookup(FormControl sender, FormControlEventArgs e)
+{
+    // Declare variables needed for the lookup and query building
+    Query                   query;
+    QueryBuildDataSource    qbds;
+    QueryBuildDataSource    qbdsSalesCheck;
+    SysTableLookup          sysTableLookup;
+    FormRun                 formRun;
+    FormDataSource          formDataSource;
+    DIN_BarcodeItemInventoryTable  dinBarcodeItemInventoryTable;
+
+    // Get the current form instance and its data source
+    formRun = sender.formRun();
+    formDataSource = formRun.dataSource(tableStr(DIN_BarcodeItemInventoryTable));
+
+    // Get the current record from the data source
+    dinBarcodeItemInventoryTable = formDataSource.cursor();
+
+    // Initialize SysTableLookup with the table and sender control
+    sysTableLookup = SysTableLookup::newParameters(tableNum(DIN_ItemInventoryTable), sender);
+
+    // Create a new query object to define lookup criteria
+    query = new Query();
+
+    // Add the main data source to the query for the lookup table
+    qbds = query.addDataSource(tableNum(DIN_ItemInventoryTable));
+
+    // Add a range filter to limit records by NTI_ItemID from the current form's record
+    qbds.addRange(fieldNum(DIN_ItemInventoryTable, NTI_ItemID)).value(queryValue(dinBarcodeItemInventoryTable.NTI_ItemID));
+
+    // Add a range filter to only include records with a specific transaction type (e.g., 'Purchase')
+    qbds.addRange(fieldNum(DIN_ItemInventoryTable, NTI_Trans_Type)).value(queryValue('Purchase'));
+
+    // Add a nested data source to check for the existence of related 'Sales' transaction types
+    qbdsSalesCheck = qbds.addDataSource(tableNum(DIN_ItemInventoryTable));
+    qbdsSalesCheck.addLink(fieldNum(DIN_ItemInventoryTable, NTI_SerialNum), fieldNum(DIN_ItemInventoryTable, NTI_SerialNum));
+    qbdsSalesCheck.joinMode(JoinMode::NoExistsJoin);
+
+    // Add a range to exclude records that already have a 'Sales' transaction type for the same serial number
+    qbdsSalesCheck.addRange(fieldNum(DIN_ItemInventoryTable, NTI_Trans_Type)).value(queryValue('Sales'));
+
+    // Group the results by the NTI_SerialNum field to avoid duplicates
+    qbds.addGroupByField(fieldNum(DIN_ItemInventoryTable, NTI_SerialNum));
+
+    // Add the lookup field to be displayed in the lookup form
+    sysTableLookup.addLookupfield(fieldNum(DIN_ItemInventoryTable, NTI_SerialNum));
+
+    // Set the query for the lookup form and perform the lookup
+    sysTableLookup.parmQuery(query);
+    sysTableLookup.performFormLookup();
+}
