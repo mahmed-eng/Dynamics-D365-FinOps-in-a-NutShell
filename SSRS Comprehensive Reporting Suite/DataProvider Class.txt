@@ -1,0 +1,97 @@
+[SRSReportParameterAttribute(classStr(DIN_ITAssetsBarcodeUtilityContractClass))]
+public class DIN_ITAssetsBarcodeUtilityDPClass extends SrsReportDataProviderPreProcessTempDB
+{
+    // Contract class for data transfer
+    DIN_ITAssetsBarcodeUtilityContractClass dc;
+
+    // Temporary table for storing barcode item inventory data
+    DIN_BarcodeItemInventoryTmpTable dinBarcodeItemInventoryTmpTable;
+
+    // Attribute to define the dataset for the report
+    [SRSReportDataSetAttribute('DIN_BarcodeItemInventoryTmpTable')]
+    public DIN_BarcodeItemInventoryTmpTable gettempSalesOrderDS()
+    {
+        // Selects all records from the temporary inventory table
+        select * from dinBarcodeItemInventoryTmpTable;
+        return dinBarcodeItemInventoryTmpTable;
+    }
+
+    // Generates a barcode from the provided barcode text
+    public str getBarcode(str _barCodeText)
+    {
+        BarcodeCode128 barcode;
+
+        // Construct a Code128 barcode
+        barcode = Barcode::construct(BarcodeType::Code128);
+        // Set the barcode text
+        barcode.string(true, _barCodeText);
+        // Encode the barcode
+        barcode.encode();
+
+        // Return the generated barcode string
+        return barcode.barcodeStr();
+    }
+
+    // Processes the report data
+    public void processReport()
+    {
+        InventItemBarcode objInventItemBarcode;
+        CustAccount _CustAccount;
+        CommissSalesGroup salesGroup;
+        TransDate transDatefieldFrom, transDatefieldTo;
+        RetailStoreId retailStoreId;
+        RetailTransactionSalesTrans retailTransactionSalesTrans;
+        RetailTransactionTable retailTransactionTable;
+        SalesLine _SalesLine;
+        NoYesId detailOrSummary;
+        List storeList, salesGroupList;
+        ListEnumerator ListEnumStorelist, ListEnumSalesGroup;
+        CommissionSalesGroup commissionSalesGroup;
+        MarkupAutoTable markupAutoTable;
+        MarkupAutoLine markupAutoLine;
+        list barCodeList;
+        ListEnumerator ListEnumBarcode;
+        str barcodeStr;
+        InventTableModule inventTableModule;
+        InventDim inventDimLocal;
+        // Temporary utility class for handling barcode operations
+        // DinBarcodeUtility dinBarcodeUtility; 
+        DIN_BarcodeItemInventoryTable dinBarcodeItemInventoryTable;
+        int counter = 0;
+
+        // Initialize the data contract
+        dc = this.parmDataContract();
+
+        // Retrieve the list of item barcodes from the data contract
+        barCodeList = dc.parmItemBarcode();
+
+        // Enumerate through each barcode in the list
+        ListEnumBarcode = barCodeList.getEnumerator();
+        while (ListEnumBarcode.moveNext())
+        {
+            barcodeStr = ListEnumBarcode.current();
+
+            // Retrieve item inventory details based on the current barcode
+            select * from dinBarcodeItemInventoryTable
+                where dinBarcodeItemInventoryTable.NTI_ItemBarcode == barcodeStr;
+
+            counter = 0;
+
+            // Insert the item details into the temporary inventory table
+            ttsbegin; // Start transaction
+            dinBarcodeItemInventoryTmpTable.clear();
+            dinBarcodeItemInventoryTmpTable.NTI_ItemBarcodeNumber = barcodeStr; // Set barcode number
+            dinBarcodeItemInventoryTmpTable.NTI_ItemBarcode = this.getBarcode(barcodeStr); // Generate and set the barcode
+            dinBarcodeItemInventoryTmpTable.NTI_ItemId = dinBarcodeItemInventoryTable.NTI_ItemId; // Set item ID
+            dinBarcodeItemInventoryTmpTable.NTI_ItemCategory = dinBarcodeItemInventoryTable.NTI_ItemCategory; // Set item category
+            dinBarcodeItemInventoryTmpTable.NTI_SerialNumber = dinBarcodeItemInventoryTable.NTI_SerialNumber; // Set serial number
+            dinBarcodeItemInventoryTmpTable.NTI_ItemName = dinBarcodeItemInventoryTable.NTI_ItemName; // Set item name
+
+            // Insert the temporary record into the database
+            dinBarcodeItemInventoryTmpTable.insert();
+            ttscommit; // Commit transaction
+
+            counter++;
+        }
+    }
+}
