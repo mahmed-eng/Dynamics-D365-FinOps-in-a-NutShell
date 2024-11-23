@@ -1,0 +1,78 @@
+public void clicked()
+{
+    // Declare temporary and permanent table variables
+    DIN_BankSettlementTmpTable tmpTable;
+    DIN_BankSettlementTable dinBankSettlementTable;
+
+    // Declare a FormDataSource variable to work with the data source of the form
+    FormDataSource ds;
+
+    // Variables to store data retrieved from the temporary table
+    str ShopName; 
+    str BankName; 
+    date BSDate; 
+    TimeOfDay BSTime; 
+    real SettlementAmount; 
+    str formattedTime; // Variable to hold the formatted time
+    str test; 
+
+    // Call the base implementation of the method
+    super();
+
+    // Initialize the data source from the form and move to the first record
+    ds = this.formRun().dataSource(formDataSourceStr(DIN_BankSettlementForm, DIN_BankSettlementTmpTable));
+    ds.first();
+
+    // Iterate through all records in the temporary table
+    while (ds.cursor())
+    {
+        // Retrieve the current record from the temporary table
+        tmpTable = ds.cursor();
+
+        // Extract data from the temporary table's current record
+        ShopName = tmpTable.DIN_ShopName;
+        BankName = tmpTable.DIN_BankName;
+        BSDate = tmpTable.DIN_SettlementDate;
+        BSTime = tmpTable.DIN_SettlementTime;
+        SettlementAmount = tmpTable.DIN_SettlementAmount;
+        test = tmpTable.DIN_Test;
+
+        // Convert the settlement time to a formatted string (HH:MM:SS AM/PM)
+        formattedTime = time2Str(BSTime, TimeSeparator::Colon, TimeFormat::AMPM);
+
+        // Begin a transaction block to ensure data integrity
+        ttsBegin;
+
+        // Prepare a new record for the permanent table
+        dinBankSettlementTable.clear();
+        dinBankSettlementTable.DIN_ShopName = ShopName;
+        dinBankSettlementTable.DIN_BankName = BankName;
+        dinBankSettlementTable.DIN_SettlementDate = BSDate;
+
+        // Store the formatted time in the permanent table
+        dinBankSettlementTable.DIN_SettlementTime = str2Time(formattedTime); // Convert formatted time back to time
+        dinBankSettlementTable.DIN_Test = formattedTime; // Store formatted time as a string for testing
+        dinBankSettlementTable.DIN_SettlementAmount = SettlementAmount;
+
+        // Insert the record into the permanent table
+        dinBankSettlementTable.insert();
+
+        // Delete the processed record from the temporary table
+        tmpTable.delete();
+
+        // Commit the transaction
+        ttsCommit;
+
+        // Move to the next record in the data source
+        ds.next();
+    }
+
+    // Notify the user that all records have been successfully inserted
+    info("All records have been successfully inserted.");
+
+    // Delete the last record from the temporary table
+    tmpTable.delete();
+
+    // Refresh the data source to reflect changes in the form
+    ds.research(true);
+}
