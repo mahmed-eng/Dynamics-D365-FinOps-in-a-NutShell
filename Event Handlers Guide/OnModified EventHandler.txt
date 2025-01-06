@@ -1,38 +1,43 @@
 internal final class DIN_MFGVendorNameModifiedEventHandler
 {
+    // Event handler for the "Modified" event of the VendorNumber form control in LedgerJournalTransVendPaym form
     [FormControlEventHandler(formControlStr(LedgerJournalTransVendPaym, LedgerJournalTrans_VendorNumber), FormControlEventType::Modified)]
     public static void LedgerJournalTrans_VendorNumber_OnModified(FormControl sender, FormControlEventArgs e)
     {
+        // Get the data source associated with the form
         FormDataSource ledgerJournalTransDS = sender.formRun().dataSource(formDataSourceStr(LedgerJournalTransVendPaym, LedgerJournalTrans));
+        
+        // Get the current record (cursor) from the data source
         LedgerJournalTrans ledgerJournalTrans = ledgerJournalTransDS.cursor();
+        
+        // Declare a variable to hold the vendor payment journal record
         CfzVendorPaymentJournal cfzVendorPaymentJournal;
 
         // Check if a VendorNumber is selected
         if (ledgerJournalTrans.VendorNumber)
         {
-            // Fetch the vendor name from CfzVendorPaymentJournal
+            // Fetch the vendor name from the CfzVendorPaymentJournal table
             select firstonly VendorName from cfzVendorPaymentJournal
                 where cfzVendorPaymentJournal.VendorNumber == ledgerJournalTrans.VendorNumber;
 
             if (cfzVendorPaymentJournal)
             {
-                // Update the VendName field in LedgerJournalTrans
+                // If a matching vendor is found, update the VendName field in LedgerJournalTrans
                 ledgerJournalTrans.VendorName = cfzVendorPaymentJournal.VendorName;
             }
             else
             {
-                // Clear the name if the vendor is not found
+                // If no matching vendor is found, clear the VendName field
                 ledgerJournalTrans.VendorName = '';
             }
         }
         else
         {
-            // Clear the name if no VendorNumber is selected
+            // If no VendorNumber is selected, clear the VendName field
             ledgerJournalTrans.VendorName = '';
         }
 
-        // Refresh the data source to update the form control
+        // Refresh the data source to reflect changes in the form control
         ledgerJournalTransDS.refresh();
     }
-
 }
