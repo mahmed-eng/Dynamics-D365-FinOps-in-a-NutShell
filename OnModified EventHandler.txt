@@ -1,0 +1,38 @@
+internal final class DIN_MFGVendorNameModifiedEventHandler
+{
+    [FormControlEventHandler(formControlStr(LedgerJournalTransVendPaym, LedgerJournalTrans_VendorNumber), FormControlEventType::Modified)]
+    public static void LedgerJournalTrans_VendorNumber_OnModified(FormControl sender, FormControlEventArgs e)
+    {
+        FormDataSource ledgerJournalTransDS = sender.formRun().dataSource(formDataSourceStr(LedgerJournalTransVendPaym, LedgerJournalTrans));
+        LedgerJournalTrans ledgerJournalTrans = ledgerJournalTransDS.cursor();
+        CfzVendorPaymentJournal cfzVendorPaymentJournal;
+
+        // Check if a VendorNumber is selected
+        if (ledgerJournalTrans.VendorNumber)
+        {
+            // Fetch the vendor name from CfzVendorPaymentJournal
+            select firstonly VendorName from cfzVendorPaymentJournal
+                where cfzVendorPaymentJournal.VendorNumber == ledgerJournalTrans.VendorNumber;
+
+            if (cfzVendorPaymentJournal)
+            {
+                // Update the VendName field in LedgerJournalTrans
+                ledgerJournalTrans.VendorName = cfzVendorPaymentJournal.VendorName;
+            }
+            else
+            {
+                // Clear the name if the vendor is not found
+                ledgerJournalTrans.VendorName = '';
+            }
+        }
+        else
+        {
+            // Clear the name if no VendorNumber is selected
+            ledgerJournalTrans.VendorName = '';
+        }
+
+        // Refresh the data source to update the form control
+        ledgerJournalTransDS.refresh();
+    }
+
+}

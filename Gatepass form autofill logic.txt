@@ -1,0 +1,157 @@
+internal final class DIN_ReferenceGatePassEventHandler
+{
+    [FormControlEventHandler(formControlStr(GPFormCustom, DinAdmin_Reference_GatePass_No), FormControlEventType::Modified)]
+    public static void DinAdmin_Reference_GatePass_No_OnModified(FormControl sender, FormControlEventArgs e)
+    {
+        FormDataSource DinAdminDS = sender.formRun().dataSource(formDataSourceStr(GPFormCustom, DinAdmin));
+                
+        DinAdmin dinAdmin,dinAdmin1;
+        dinAdmin = DinAdminDS.cursor();
+        
+        if (dinAdmin.Reference_GatePass_No)
+        {
+            select firstonly
+                Responsible_Person,GPType,GPType1,GPCategory,GPDate,To_Location,TOLookup,PurchaseOrder,SalesOrder,Dept_Lookup,SubDep_Lookup,Logistic_Vendor,ReturnDate,VehicleNo,Status
+                ,Verification_Status,Quantity,NumberOfCartons_Per_Bag,Vendor_Lookup,Cash_Credit,Amount,Bill_No,Vendor_Manual,Address,ItemDetail,Remarks,Entry_Status,DIN_ReferenceNumberManual
+                from dinAdmin1
+                where dinAdmin1.GatePassId == dinAdmin.Reference_GatePass_No;
+
+            if (dinAdmin1)
+            {
+                DinAdminDS.object(fieldnum(DinAdmin, GPCategory)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, GPType1)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, To_Location)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, GPType)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, Dept_Lookup)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, SubDep_Lookup)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, ReturnDate)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, Vendor_Lookup)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, Vendor_Manual)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, Address)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, ItemDetail)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, Entry_Status)).enabled(false);
+                DinAdminDS.object(fieldnum(DinAdmin, DIN_ReferenceNumberManual)).enabled(false);
+
+
+                dinAdmin.Responsible_Person                         = dinAdmin1.Responsible_Person;
+                dinAdmin.GPType                                     = dinAdmin1.GPType;                               
+                dinAdmin.GPType1                                    = dinAdmin1.GPType1;
+                dinAdmin.GPCategory                                 = dinAdmin.GPCategory;
+                dinAdmin.GPDate                                     = SystemDateGet();
+                dinAdmin.To_Location                                = dinAdmin1.To_Location;
+                dinAdmin.TOLookup                                   = dinAdmin1.TOLookup;                
+
+                if(dinAdmin.TOLookup != '')
+                {
+                    DinAdminDS.object(fieldnum(DinAdmin, TOLookup)).allowEdit(true);
+                    DinAdminDS.object(fieldnum(DinAdmin, TOLookup)).enabled(false);
+                    DinAdminDS.object(fieldnum(DinAdmin, TOLookup)).visible(true);
+                    DinAdminDS.object(fieldnum(DinAdmin, TOLookup)).allowAdd(true);
+                }
+
+                dinAdmin.PurchaseOrder                              = dinAdmin1.PurchaseOrder;
+
+                if(dinAdmin.PurchaseOrder != '')
+                {
+                    DinAdminDS.object(fieldnum(DinAdmin, PurchaseOrder)).allowEdit(true);
+                    DinAdminDS.object(fieldnum(DinAdmin, PurchaseOrder)).enabled(false);
+                    DinAdminDS.object(fieldnum(DinAdmin, PurchaseOrder)).visible(true);
+                    DinAdminDS.object(fieldnum(DinAdmin, PurchaseOrder)).allowAdd(true);
+                }
+
+                dinAdmin.SalesOrder                                 = dinAdmin1.SalesOrder;
+
+                if(dinAdmin.SalesOrder != '')
+                {
+                    DinAdminDS.object(fieldnum(DinAdmin, SalesOrder)).allowEdit(true);
+                    DinAdminDS.object(fieldnum(DinAdmin, SalesOrder)).enabled(false);
+                    DinAdminDS.object(fieldnum(DinAdmin, SalesOrder)).visible(true);
+                    DinAdminDS.object(fieldnum(DinAdmin, SalesOrder)).allowAdd(true);
+                }
+
+                dinAdmin.Dept_Lookup                                = dinAdmin1.Dept_Lookup;
+                dinAdmin.SubDep_Lookup                              = dinAdmin1.SubDep_Lookup;
+                dinAdmin.Logistic_Vendor                            = dinAdmin1.Logistic_Vendor;
+                dinAdmin.ReturnDate                                 = dinAdmin1.ReturnDate;
+                dinAdmin.VehicleNo                                  = dinAdmin1.VehicleNo;
+                dinAdmin.Status                                     = dinAdmin1.Status;
+                dinAdmin.Verification_Status                        = dinAdmin1.Verification_Status;
+                dinAdmin.Quantity                                   = dinAdmin1.Quantity;
+                dinAdmin.NumberOfCartons_Per_Bag                    = dinAdmin1.NumberOfCartons_Per_Bag;
+                dinAdmin.Vendor_Lookup                              = dinAdmin1.Vendor_Lookup;
+                dinAdmin.Cash_Credit                                = dinAdmin1.Cash_Credit;
+                dinAdmin.Amount                                     = dinAdmin1.Amount;
+                dinAdmin.Bill_No                                    = dinAdmin1.Bill_No;
+                dinAdmin.Vendor_Manual                              = dinAdmin1.Vendor_Manual;
+                dinAdmin.Address                                    = dinAdmin1.Address;
+                dinAdmin.ItemDetail                                 = dinAdmin1.ItemDetail;
+                dinAdmin.Remarks                                    = dinAdmin1.Remarks;
+                dinAdmin.Entry_Status                               = dinAdmin1.Entry_Status;
+                dinAdmin.DIN_ReferenceNumberManual                  = dinAdmin1.DIN_ReferenceNumberManual;
+            }
+            else
+            {
+                dinAdmin.Responsible_Person        = '';
+                dinAdmin.GPType                    = 0;
+                dinAdmin.GPType1                   = 0;
+                dinAdmin.GPDate                   = SystemDateGet();
+                dinAdmin.To_Location               = '';
+                dinAdmin.TOLookup                  = '';
+                dinAdmin.PurchaseOrder             = '';
+                dinAdmin.SalesOrder                = '';
+                dinAdmin.Dept_Lookup               = '';
+                dinAdmin.SubDep_Lookup             = '';
+                dinAdmin.Logistic_Vendor           = '';
+                dinAdmin.ReturnDate                = SystemDateGet();
+                dinAdmin.VehicleNo                 = '';
+                dinAdmin.Status                    = '';
+                dinAdmin.Verification_Status       = 0;
+                dinAdmin.Quantity                  = 0;
+                dinAdmin.NumberOfCartons_Per_Bag   = 0;
+                dinAdmin.Vendor_Lookup             = '';
+                dinAdmin.Cash_Credit               = 0;
+                dinAdmin.Amount                    = 0;
+                dinAdmin.Bill_No                   = '';
+                dinAdmin.Vendor_Manual             = '';
+                dinAdmin.Address                   = '';
+                dinAdmin.ItemDetail                = '';
+                dinAdmin.Remarks                   = '';
+                dinAdmin.Entry_Status              = 0;
+                dinAdmin.DIN_ReferenceNumberManual = '';
+            }
+        }
+        else
+        {
+            dinAdmin.Responsible_Person        = '';
+            dinAdmin.GPType                    = 0;
+            dinAdmin.GPType1                   = 0;
+            dinAdmin.GPDate                   = SystemDateGet();
+            dinAdmin.To_Location               = '';
+            dinAdmin.TOLookup                  = '';
+            dinAdmin.PurchaseOrder             = '';
+            dinAdmin.SalesOrder                = '';
+            dinAdmin.Dept_Lookup               = '';
+            dinAdmin.SubDep_Lookup             = '';
+            dinAdmin.Logistic_Vendor           = '';
+            dinAdmin.ReturnDate                = SystemDateGet();
+            dinAdmin.VehicleNo                 = '';
+            dinAdmin.Status                    = '';
+            dinAdmin.Verification_Status       = 0;
+            dinAdmin.Quantity                  = 0;
+            dinAdmin.NumberOfCartons_Per_Bag   = 0;
+            dinAdmin.Vendor_Lookup             = '';
+            dinAdmin.Cash_Credit               = 0;
+            dinAdmin.Amount                    = 0;
+            dinAdmin.Bill_No                   = '';
+            dinAdmin.Vendor_Manual             = '';
+            dinAdmin.Address                   = '';
+            dinAdmin.ItemDetail                = '';
+            dinAdmin.Remarks                   = '';
+            dinAdmin.Entry_Status              = 0;
+            dinAdmin.DIN_ReferenceNumberManual = '';
+        }
+      
+        DinAdminDS.refresh();
+    }
+
+}

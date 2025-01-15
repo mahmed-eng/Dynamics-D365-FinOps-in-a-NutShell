@@ -1,0 +1,75 @@
+ public boolean modified()
+        {
+            boolean ret;
+        
+            ret = super();
+            DinAdmin tmpTable = DinAdmin_DS.cursor();
+            GPType transferId = tmpTable.GPType;
+            if (transferId == 1 ) // Transfer Orders
+            {
+            
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).allowEdit(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).enabled(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).visible(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).allowAdd(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).visible(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).visible(false);
+            }
+
+            else if (transferId == 6) // Purchase Order 
+            
+            {
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).visible(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).allowAdd(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).allowEdit(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).enabled(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).visible(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).allowAdd(true);               
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).visible(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).allowAdd(false);
+            }
+
+            else if (transferId == 5) // Sales Order
+            {
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).visible(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).allowAdd(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).visible(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).allowAdd(false);            
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).allowEdit(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).enabled(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).visible(true);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).allowAdd(true);
+                
+                
+            }
+            else
+            {
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).visible(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, TOLookup)).allowAdd(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).visible(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, PurchaseOrder)).allowAdd(false);                
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).allowEdit(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).enabled(false);
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).visible(false);              
+                DinAdmin_ds.object(fieldnum(DinAdmin, SalesOrder)).allowAdd(false);
+            }
+            return ret;
+        }
+
+    }
