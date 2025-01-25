@@ -1,0 +1,36 @@
+[Control("String")]
+// This annotation specifies the type of control associated with this class.
+class DinAdmin_Reference_GatePass_No
+{
+    // Method to implement a lookup for GatePassId and GPCategory fields.
+    public void lookup()
+    {
+        Query query = new Query(); // Create a new query object to define data retrieval logic.
+        QueryBuildDataSource qbds; // Define a data source for the query.
+        SysTableLookup sysTableLookup; // SysTableLookup is used to create a lookup form for a field.
+
+        // Get the form control where the lookup will be displayed.
+        FormControl control = element.design().controlName(this.name());
+
+        // Initialize the SysTableLookup object with the table and control.
+        sysTableLookup = SysTableLookup::newParameters(
+            tableNum(DinAdmin), // Specify the table for the lookup.
+            control // Specify the form control for the lookup.
+        );
+
+        // Add fields from the DinAdmin table to be displayed in the lookup form.
+        sysTableLookup.addLookupfield(fieldNum(DinAdmin, GatePassId)); // Add GatePassId field to the lookup.
+        sysTableLookup.addLookupfield(fieldNum(DinAdmin, GPCategory)); // Add GPCategory field to the lookup.
+
+        // Add a data source to the query and apply a filter to it.
+        qbds = query.addDataSource(tableNum(DinAdmin)); // Add the DinAdmin table as a data source.
+        qbds.addRange(fieldNum(DinAdmin, GPCategory)).value(queryValue('1')); 
+        // Filter the GPCategory field to only show records with a value of '1'.
+
+        // Assign the query to the SysTableLookup object.
+        sysTableLookup.parmQuery(query);
+
+        // Execute the lookup and display the results in the form control.
+        sysTableLookup.performFormLookup();
+    }
+}
