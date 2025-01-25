@@ -1,0 +1,37 @@
+internal final class DIN_LookupGatePassSubDepartmentEventHandler
+{
+    [FormControlEventHandler(formControlStr(GPFormCustom, DinAdmin_SubDep_Lookup), FormControlEventType::Lookup)]
+    public static void DinAdmin_SubDep_Lookup_OnLookup(FormControl sender, FormControlEventArgs e)
+    {
+        Query query;
+        QueryBuildDataSource qbdsSubDepartment, qbdsDepartments;
+        SysTableLookup sysTableLookup;
+        FormRun formRun;
+        FormDataSource formDataSource;
+        DinAdmin dinAdmin;
+
+        formRun = sender.formRun();
+        formDataSource = formRun.dataSource(tableStr(DinAdmin));
+        dinAdmin = formDataSource.cursor();
+
+        sysTableLookup = SysTableLookup::newParameters(tableNum(SubDepartment), sender);
+        
+        query = new Query();
+        qbdsSubDepartment = query.addDataSource(tableNum(SubDepartment));
+
+        // Add Departments as a child data source to SubDepartment
+        qbdsDepartments = qbdsSubDepartment.addDataSource(tableNum(Departments));
+
+        // Create a link between the SubDepartment and Departments tables on Dep_Code
+        qbdsDepartments.addLink(fieldNum(Departments, Dep_Code), fieldNum(SubDepartment, Dept));
+
+        // Apply filter on Department Name
+        qbdsDepartments.addRange(fieldNum(Departments, Dep_Name)).value(queryValue(dinAdmin.Dept_Lookup));
+
+        sysTableLookup.addLookupfield(fieldNum(SubDepartment, SubDept), true);
+
+        sysTableLookup.parmQuery(query);
+        sysTableLookup.performFormLookup();
+    }
+
+}

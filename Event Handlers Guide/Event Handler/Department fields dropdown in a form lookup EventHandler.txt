@@ -1,0 +1,23 @@
+internal final class DIN_LookupGatePassDepartmentEventHandler
+{
+    [FormControlEventHandler(formControlStr(GPFormCustom, DinAdmin_Dept_Lookup), FormControlEventType::Lookup)]
+    public static void DinAdmin_Dept_Lookup_OnLookup(FormControl sender, FormControlEventArgs e)
+    {
+        Query                   query;
+        QueryBuildDataSource    qbds;
+        SysTableLookup          sysTableLookup;
+        
+        sysTableLookup = SysTableLookup::newParameters(tableNum(Departments), sender);
+      
+        query = new Query();
+        qbds = query.addDataSource(tableNum(Departments));
+        
+        // Ensure Dep_Name is stored in Dept_Lookup
+        sysTableLookup.addLookupfield(fieldNum(Departments, Dep_Name), true); // TRUE makes this the returned value
+        sysTableLookup.addLookupfield(fieldNum(Departments, Dep_Code));
+        
+        sysTableLookup.parmQuery(query);
+        sysTableLookup.performFormLookup();
+    }
+
+}
