@@ -1,0 +1,67 @@
+// Define the class for building the UI related to DIN Returnable Gate Pass History
+class DIN_ReturnableGatePassHistoryUIBuilder extends SrsReportDataContractUIBuilder
+{
+    // Declare dialog fields for From Date, To Date, and Gate Pass ID
+    DialogField DialogFromDate;
+    DialogField DialogToDate;
+    DialogField gatepassId;
+    
+    // Declare a contract object to hold the parameters for the report
+    DIN_ReturnableGatePassHistoryContract _contract;
+
+    // Build method initializes the dialog fields and binds them to the contract parameters
+    public void build()
+    {
+        // Initialize the contract from the data contract object
+        _contract = this.datacontractobject() as DIN_ReturnableGatePassHistoryContract;
+
+        // Create and bind dialog fields to the respective contract parameters
+        DialogFromDate = this.addDialogField(methodStr(DIN_ReturnableGatePassHistoryContract, ParmFromDate), _contract);
+        DialogToDate = this.addDialogField(methodStr(DIN_ReturnableGatePassHistoryContract, ParmToDate), _contract);
+        gatepassId = this.addDialogField(methodStr(DIN_ReturnableGatePassHistoryContract, ParmGatePassId), _contract);
+    }
+
+    // Lookup method for Gate Pass ID to search and display available options
+    public void lookupGatePassId(FormStringControl _control)
+    {
+        // Declare a query object and associated data source
+        Query query = new Query();
+        QueryBuildDataSource qbds_GatePass;
+        SysTableLookup sysTablelookup;
+       
+        // Add a data source to the query for the DinAdmin table
+        qbds_GatePass = query.addDataSource(tableNum(DinAdmin));
+    
+        // Apply a filter to the query for a specific category (GPCategory = 1)
+        qbds_GatePass.addRange(fieldNum(DinAdmin, GPCategory)).value(queryValue(1));      
+        
+        // Create a system table lookup object to enable a lookup on the DinAdmin table
+        sysTablelookup = SysTableLookup::newParameters(tableNum(DinAdmin), _control);      
+        
+        // Specify which fields should be available for lookup in the dialog
+        sysTablelookup.addLookupField(fieldNum(DinAdmin, GatePassId));
+        sysTablelookup.addLookupField(fieldNum(DinAdmin, GPCategory));
+        
+        // Set the query to be used for the lookup
+        sysTablelookup.parmQuery(query);
+       
+        // Perform the lookup when the user interacts with the field
+        sysTablelookup.performFormLookup();
+    }
+
+    // Post-build method to finalize UI element behavior after the fields are created
+    public void postBuild()
+    {
+        // Bind the GatePassId dialog field from the contract
+        gatepassId = this.bindInfo().getDialogField(_contract, methodStr(DIN_ReturnableGatePassHistoryContract, ParmGatePassId));
+        
+        // Override the lookup method for the GatePassId field with custom logic
+        gatepassId.registerOverrideMethod(methodStr(FormStringControl, lookup), methodStr(DIN_ReturnableGatePassHistoryUIBuilder, lookupGatePassId), this);
+        
+        // If the GatePassId field exists, enable the lookup button
+        if (gatepassId)
+        {
+            gatepassId.lookupButton(2);
+        }
+    }
+}

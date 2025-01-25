@@ -1,0 +1,119 @@
+[SRSReportParameterAttribute(classstr(DIN_ReturnableGatePassHistoryContract))] // Attribute defining the report parameter for the contract class
+class DIN_ReturnableGatePassHistoryDP extends SrsReportDataProviderPreProcessTempDB
+{
+    DIN_ReturnableGatePassHistoryTmpTable din_ReturnableGatePassHistoryTmpTable; // Temporary table to hold gate pass history data
+    str gatepassid; // Variable to hold the gate pass ID
+
+    // This method is used to retrieve the returnable gate pass history from the temporary table
+    [SRSReportDataSetAttribute(tablestr(DIN_ReturnableGatePassHistoryTmpTable))] 
+    public DIN_ReturnableGatePassHistoryTmpTable getReturnableGatePassHistory()
+    {
+        select din_ReturnableGatePassHistoryTmpTable; // Select all records from the temporary table
+        return din_ReturnableGatePassHistoryTmpTable; // Return the table
+    }
+
+    // Main report processing logic
+    public void processReport()
+    {
+        DIN_ReturnableGatePassHistoryContract contract; // Contract to hold the input parameters for the report
+        TransDate fromDate, toDate; // Variables to hold the date range for the report
+        DinAdmin dinAdmin, dinAdmin1; // Variables to hold data from the dinAdmin table (primary and reference gate pass records)
+        Departments departments; // Variable for departments data
+        str currentUserId; // Current logged in user's ID
+        SysUserInfo sysUserInfo1; // Variable to hold the user information
+        contract = this.parmDataContract() as DIN_ReturnableGatePassHistoryContract; // Get the contract data from the report's parameter
+        
+        currentUserId = curUserId(); // Get the current user ID
+        fromDate  = contract.ParmFromDate(); // Get the start date for the report
+        toDate    = contract.ParmToDate(); // Get the end date for the report
+        gatepassid = contract.ParmGatePassId(); // Get the specific gate pass ID if provided
+        
+        str ReferenceGP; // Variable to store reference gate pass numbers
+        int RemQTY; // Variable to store the remaining quantity
+
+        // Check if a specific gate pass ID is provided
+        if (gatepassid)
+        {
+            // Select dinAdmin records where GatePassId or Reference_GatePass_No matches the input gatepassid
+            while select * from dinAdmin where dinAdmin.GatePassId == gatepassid  || dinAdmin.Reference_GatePass_No == gatepassid
+                && dinAdmin.GPDate >= fromDate && dinAdmin.GPDate <= toDate && dinAdmin.GPCategory == 1
+            {
+                din_ReturnableGatePassHistoryTmpTable.clear(); // Clear any existing records in the temporary table
+                ReferenceGP = ''; // Reset the reference gate pass variable
+                RemQTY = 0; // Reset the remaining quantity
+
+                // Populate the temporary table with values from dinAdmin
+                din_ReturnableGatePassHistoryTmpTable.DIN_GatePassId = dinAdmin.GatePassId;
+                din_ReturnableGatePassHistoryTmpTable.DIN_GPDate = dinAdmin.GPDate;
+                din_ReturnableGatePassHistoryTmpTable.DIN_QTY = dinAdmin.Quantity;
+                din_ReturnableGatePassHistoryTmpTable.DIN_Category = dinAdmin.GPCategory;
+                din_ReturnableGatePassHistoryTmpTable.DIN_TOLocation = dinAdmin.To_Location;                
+                din_ReturnableGatePassHistoryTmpTable.DIN_Department = dinAdmin.Dept_Lookup;                
+                din_ReturnableGatePassHistoryTmpTable.DIN_SubDepartment = dinAdmin.SubDep_Lookup;
+
+                // Select dinAdmin1 records where the Reference_GatePass_No matches the current GatePassId
+                while select * from dinAdmin1 where dinAdmin1.Reference_GatePass_No == din_ReturnableGatePassHistoryTmpTable.DIN_GatePassId
+                    && dinAdmin1.GPDate >= fromDate && dinAdmin1.GPDate <= toDate && dinAdmin1.GPCategory == 0
+                {
+                    ReferenceGP += "/" + dinAdmin1.GatePassId; // Append the reference gate pass ID
+                    RemQTY += dinAdmin1.Quantity; // Add the quantity to remaining quantity
+
+                    // Update the temporary table with returnable quantities and reference gate pass numbers
+                    din_ReturnableGatePassHistoryTmpTable.DIN_ReturnQty = RemQTY;
+                    din_ReturnableGatePassHistoryTmpTable.DIN_ReturnableGatePassNo = ReferenceGP;
+                }
+
+                // Get the user information for the current user
+                select firstOnly sysUserInfo1 where sysUserInfo1.Id == currentUserId;
+                {
+                    din_ReturnableGatePassHistoryTmpTable.DIN_CreatedBy = sysUserInfo1.Id; // Set the created by field to the current user ID
+                }
+
+                // Insert the data into the temporary table
+                din_ReturnableGatePassHistoryTmpTable.insert();
+            }
+        }
+        else
+        {
+            // If no specific gate pass ID is provided, select all records in the given date range
+            while select * from dinAdmin where 
+                 dinAdmin.GPDate >= fromDate && dinAdmin.GPDate <= toDate && dinAdmin.GPCategory == 1
+            {
+                din_ReturnableGatePassHistoryTmpTable.clear(); // Clear the temporary table
+                ReferenceGP = ''; // Reset the reference gate pass variable
+                RemQTY = 0; // Reset the remaining quantity
+
+                // Populate the temporary table with values from dinAdmin
+                din_ReturnableGatePassHistoryTmpTable.DIN_GatePassId = dinAdmin.GatePassId;
+                din_ReturnableGatePassHistoryTmpTable.DIN_GPDate = dinAdmin.GPDate;
+                din_ReturnableGatePassHistoryTmpTable.DIN_QTY = dinAdmin.Quantity;
+                din_ReturnableGatePassHistoryTmpTable.DIN_Category = dinAdmin.GPCategory;
+                din_ReturnableGatePassHistoryTmpTable.DIN_TOLocation = dinAdmin.To_Location;
+                din_ReturnableGatePassHistoryTmpTable.DIN_Department = dinAdmin.Dept_Lookup;
+                din_ReturnableGatePassHistoryTmpTable.DIN_SubDepartment = dinAdmin.SubDep_Lookup;
+
+                // Select dinAdmin1 records where Reference_GatePass_No matches the current GatePassId
+                while select * from dinAdmin1 where dinAdmin1.Reference_GatePass_No == din_ReturnableGatePassHistoryTmpTable.DIN_GatePassId
+                    && dinAdmin1.GPDate >= fromDate && dinAdmin1.GPDate <= toDate && dinAdmin1.GPCategory == 0
+                {
+                    ReferenceGP += "/" + dinAdmin1.GatePassId; // Append the reference gate pass ID
+                    RemQTY += dinAdmin1.Quantity; // Add the quantity to the remaining quantity
+
+                    // Update the temporary table with returnable quantities and reference gate pass numbers
+                    din_ReturnableGatePassHistoryTmpTable.DIN_ReturnQty = RemQTY;
+                    din_ReturnableGatePassHistoryTmpTable.DIN_ReturnableGatePassNo = ReferenceGP;
+                }
+
+                // Get the user information for the current user
+                select firstOnly sysUserInfo1 where sysUserInfo1.Id == currentUserId;
+                {
+                    din_ReturnableGatePassHistoryTmpTable.DIN_CreatedBy = sysUserInfo1.Id; // Set the created by field to the current user ID
+                }
+
+                // Insert the data into the temporary table
+                din_ReturnableGatePassHistoryTmpTable.insert();
+            }
+        }
+    }
+
+}

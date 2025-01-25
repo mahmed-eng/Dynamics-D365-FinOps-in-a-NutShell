@@ -1,0 +1,49 @@
+// The class is marked with DataContract and SysOperationContractProcessing attributes
+// This allows it to be used as a contract for an operation and defines the UI builder class for processing the contract
+[DataContractAttribute, SysOperationContractProcessingAttribute(classStr(DIN_ReturnableGatePassHistoryUIBuilder))]
+class DIN_ReturnableGatePassHistoryContract
+{
+    // Declare contract fields
+    Transdate fromDate;       // From date for the report
+    TransDate todate;         // To date for the report
+    str gatepassId;           // Gate pass ID to filter results
+    str printedBy;            // The person who printed the report
+
+    // Method to get or set the "From Date" field
+    // The DataMemberAttribute makes it a part of the data contract, and SysOperationLabelAttribute provides the label for the UI
+    [
+    DataMemberAttribute('FromDate'),
+    SysOperationLabelAttribute("From Date")
+    ]
+    public FromDate ParmFromDate(FromDate _FromDate = FromDate)
+    {
+        // Set the value of the fromDate field (default is FromDate)
+        FromDate = _FromDate;
+        return FromDate; // Return the value of FromDate
+    }
+
+    // Method to get or set the "To Date" field
+    [
+    DataMemberAttribute('ToDate'),
+    SysOperationLabelAttribute("To Date")
+    ]
+    public ToDate ParmToDate(ToDate _ToDate = ToDate)
+    {
+        // Set the value of the toDate field (default is ToDate)
+        ToDate = _ToDate;
+        return ToDate; // Return the value of ToDate
+    }
+
+    // Method to get or set the "Gate Pass Id" field
+    [
+    DataMemberAttribute("GatePass Id"),
+    SysOperationLabelAttribute(literalStr("GatePass Id"))
+    ]
+    public str ParmGatePassId(str _gatepassId = gatepassId)
+    {
+        // Set the value of the gatepassId field (default is gatepassId)
+        gatepassId = _gatepassId;
+        return gatepassId; // Return the value of gatepassId
+    }
+
+}
