@@ -1,0 +1,1 @@
+This report is responsible of sending whole record associated with gatepass id field 
