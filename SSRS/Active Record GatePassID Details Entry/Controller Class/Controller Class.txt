@@ -1,0 +1,66 @@
+public class DINGatePassControllerClass extends SrsReportRunController
+{
+    // Constructor method to create an instance of the class
+    public static DINGatePassControllerClass construct()
+    {
+        return new DINGatePassControllerClass();
+    }
+
+    // Main method to execute the report
+    public static void main(Args _args)
+    {
+        // Create an instance of the class
+        DINGatePassControllerClass dINGatePassControllerClass = new DINGatePassControllerClass();
+        
+        // Set the report name to the specified SSRS report
+        DINGatePassControllerClass.parmReportName(ssrsReportStr(DinGatePassRepo, PrecisionDesign1));
+        
+        // Pass the arguments to the controller
+        DINGatePassControllerClass.parmArgs(_args);
+        
+        // Set the dialog visibility to false to skip the user prompt
+        DINGatePassControllerClass.parmShowDialog(false);
+        
+        // Start the report generation process
+        DINGatePassControllerClass.startOperation();
+    }
+
+    // Method to modify the contract before prompting the user
+    protected void prePromptModifyContract()
+    {
+        DinAdmin dinAdmin; // Table buffer for DinAdmin table
+        FormDataSource fds; // DataSource for the current form
+        List GatePassIdList = new List(Types::String); // List to store selected GatePass IDs
+        
+        // Get the contract for the report
+        DinGatePassContractClass contract = new DinGatePassContractClass();
+        contract = this.parmReportContract().parmRdpContract() as DinGatePassContractClass;
+        
+        // Get the form's data source
+        fds = FormDataUtil::getFormDataSource(this.parmArgs().record());
+
+        // Check if arguments are passed and dataset matches DinAdmin table
+        if (this.parmArgs() && this.parmArgs().dataset() == tableNum(DinAdmin))
+        {
+            // Iterate through the selected records in the form
+            for (dinAdmin = getFirstSelection(fds); dinAdmin; dinAdmin = fds.getNext())
+            {
+                // Add the selected GatePassId to the list
+                GatePassIdList.addEnd(dinAdmin.GatePassId);
+                
+                // Log the selected GatePassId for debugging purposes
+                info(strFmt('Selected GatePassId: %1', dinAdmin.GatePassId));
+            }
+
+            // If the contract is valid, set the GatePassId list in the contract
+            if (contract)
+            {
+                contract.GatePassId(GatePassIdList);
+            }
+        }
+
+        // Skip showing the dialog box as it's not needed
+        this.parmShowDialog(false);
+    }
+
+}

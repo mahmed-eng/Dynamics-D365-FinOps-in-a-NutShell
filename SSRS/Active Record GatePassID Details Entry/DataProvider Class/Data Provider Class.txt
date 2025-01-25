@@ -1,0 +1,80 @@
+// This class represents the data provider for the "DinGatePass" report.
+// It extends the SRSReportDataProviderBase class to enable integration with SQL Reporting Services (SRS).
+[SRSReportParameterAttribute(classStr(DinGatePassContractClass))]
+public class DinGatePassDPClass extends SRSReportDataProviderBase
+{
+    // By 4hm3d Variables to store data and manage report processing.
+    GatePassId                gatePassId;                   // Stores a single GatePass ID.
+    DinGatePassContractClass  dingate;                     // Stores the data contract for the report.
+    GatePassReportTemp        gatePassReportTemptbl;       // Temporary table for the report data.
+    DinAdmin                  dinAdminGP;                  // Reference to the main GatePass data.
+    List                      GatePassIdList;              // List of GatePass IDs to process.
+
+    // This method returns the temporary table associated with the report.
+    [SRSReportDataSetAttribute(tableStr(GatePassReportTemp))]
+    public GatePassReportTemp getGatePassReportTemp()
+    {
+        // Select all records from the temporary table and return it.
+        select * from gatePassReportTemptbl;
+        return gatePassReportTemptbl;
+    }
+
+    // This method processes the report and populates the temporary table with data.
+    public void processReport()
+    {
+        ListEnumerator  _list_Enumerator;  // Enumerator to iterate through the GatePassIdList.
+        dingate = this.parmDataContract(); // Retrieve the data contract object.
+        GatePassIdList = dingate.GatePassId(); // Retrieve the list of GatePass IDs from the contract.
+        _list_Enumerator = GatePassIdList.getEnumerator(); // Initialize the enumerator.
+
+        // Iterate through the GatePass IDs in the list.
+        while (_list_Enumerator.moveNext())
+        {
+            gatePassId = _list_Enumerator.current(); // Get the current GatePass ID.
+
+            // Fetch all records from dinAdminGP matching the current GatePass ID.
+            while select * from dinAdminGP where dinAdminGP.GatePassId == gatePassId
+            {
+                // Map the fields from dinAdminGP to the temporary table.
+                gatePassReportTemptbl.GatePassId = dinAdminGP.GatePassId;
+                gatePassReportTemptbl.GPDate = dinAdminGP.GPDate;
+                gatePassReportTemptbl.GPType1 = dinAdminGP.GPType1;
+                gatePassReportTemptbl.GPCategory = dinAdminGP.GPCategory;
+                gatePassReportTemptbl.To_Location = dinAdminGP.To_Location;
+                gatePassReportTemptbl.GPType = dinAdminGP.GPType;
+                gatePassReportTemptbl.TOLookup = dinAdminGP.TOLookup;
+                gatePassReportTemptbl.PurchaseOrder = dinAdminGP.PurchaseOrder;
+                gatePassReportTemptbl.SalesOrder = dinAdminGP.SalesOrder;
+                gatePassReportTemptbl.Dept_Lookup = dinAdminGP.Dept_Lookup;
+                gatePassReportTemptbl.SubDep_Lookup = dinAdminGP.SubDep_Lookup;
+                gatePassReportTemptbl.Logistic_Vendor = dinAdminGP.Logistic_Vendor;
+                gatePassReportTemptbl.Responsible_Person = dinAdminGP.Responsible_Person;
+                gatePassReportTemptbl.VehicleNo = dinAdminGP.VehicleNo;
+                gatePassReportTemptbl.Reference_GatePass_No = dinAdminGP.Reference_GatePass_No;
+                gatePassReportTemptbl.Status = dinAdminGP.Status;
+                gatePassReportTemptbl.Verification_Status = dinAdminGP.Verification_Status;
+                gatePassReportTemptbl.Quantity = dinAdminGP.Quantity;
+                gatePassReportTemptbl.NumberOfCartons_Per_Bag = dinAdminGP.NumberOfCartons_Per_Bag;
+                gatePassReportTemptbl.Vendor_Lookup = dinAdminGP.Vendor_Lookup;
+                gatePassReportTemptbl.Cash_Credit = dinAdminGP.Cash_Credit;
+                gatePassReportTemptbl.Amount = dinAdminGP.Amount;
+                gatePassReportTemptbl.Bill_No = dinAdminGP.Bill_No;
+                gatePassReportTemptbl.Vendor_Manual = dinAdminGP.Vendor_Manual;
+                gatePassReportTemptbl.DIN_ReferenceNumberManual = dinAdminGP.DIN_ReferenceNumberManual;
+                gatePassReportTemptbl.SysCreatedDateTime = dinAdminGP.SysCreatedDateTime;
+                gatePassReportTemptbl.Address = dinAdminGP.Address;
+                gatePassReportTemptbl.ItemDetail = dinAdminGP.ItemDetail;
+                gatePassReportTemptbl.Remarks = dinAdminGP.Remarks;
+                gatePassReportTemptbl.Entry_Status = dinAdminGP.Entry_Status;
+                gatePassReportTemptbl.ReturnDate = dinAdminGP.ReturnDate;
+
+                // Insert the mapped data into the temporary table.
+                gatePassReportTemptbl.insert();
+            }
+            
+            // Log a success message after processing all records for the current GatePass ID.
+            info("All records have been successfully processed and transferred.");
+        }
+    }
+
+}

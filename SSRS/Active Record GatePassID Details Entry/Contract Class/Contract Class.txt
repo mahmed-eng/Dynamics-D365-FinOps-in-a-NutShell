@@ -1,0 +1,26 @@
+// The DataContractAttribute is applied to this class,
+// making it serializable for use in WCF services or AIF (Application Integration Framework).
+[DataContractAttribute]
+public class DinGatePassContractClass
+{
+    // A private list to store GatePassId values
+    List GatePassId;
+
+    // The DataMemberAttribute indicates that the property is a part of the data contract
+    // AifCollectionTypeAttribute specifies the type of collection elements in AX
+    // SysOperationLabelAttribute provides a label for this field in the SysOperation framework
+    [DataMemberAttribute('GatePassId'),
+        AifCollectionTypeAttribute('GatePassId', Types::String),
+        SysOperationLabelAttribute(literalStr("Gate Pass ID"))]
+    
+    // This method serves as both a getter and a setter for the GatePassId property.
+    // If an argument (_gatepassId) is passed, it assigns the value to GatePassId.
+    // Returns the current or updated value of GatePassId.
+    public List GatePassId(List _gatepassId = GatePassId)
+    {
+        GatePassId = _gatepassId; // Update the GatePassId if a new value is provided
+        
+        return GatePassId; // Return the updated GatePassId
+    }
+
+}
