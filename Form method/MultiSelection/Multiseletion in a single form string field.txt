@@ -1,0 +1,38 @@
+  [Control("String")]
+    class DinAdmin_TOLookup
+    {
+        public void lookup()
+        {
+            Query                       query;
+            QueryBuildDataSource        queryBuildDataSource;
+            QueryBuildFieldList         fieldList;
+            InventTransferTable          inventTransferTable;
+ 
+            super(); 
+
+            query                   = new Query();
+            queryBuildDataSource    = query.addDataSource(tableNum(InventTransferTable));
+
+            fieldList               = queryBuildDataSource.fields();
+
+            fieldList.addField(fieldNum(InventTransferTable,transferid));  
+          
+            fieldList.dynamic(QueryFieldListDynamic::No); 
+
+            container   selectedField = [tableNum(InventTransferTable), fieldNum(InventTransferTable,transferid)]; 
+
+            multicltrl = SysLookupMultiSelectCtrl::constructWithQuery(this.formRun(),this,query,false,selectedField);
+        }
+
+        public boolean modified()
+        {
+            boolean ret;       
+
+            ret = super();
+
+            DinAdmin.TOLookup = con2Str(multicltrl.getSelectedFieldValues(), ';');
+
+            return ret;
+        }
+
+    }
