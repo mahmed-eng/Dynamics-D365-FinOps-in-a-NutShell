@@ -1,0 +1,49 @@
+internal final class Din_DebitVoucherOnInitializedEventHandler
+{
+    [FormEventHandler(formStr(Din_DebitVoucherForm), FormEventType::Initialized)]
+    public static void Din_DebitVoucherForm_OnInitialized(xFormRun sender, FormEventArgs e)
+    {
+        // Set the form to edit mode
+        sender.design().viewEditMode(ViewEditMode::Edit);
+
+        // Get the form's primary datasource
+        FormDataSource dinDebitVoucherTable_ds = sender.dataSource(formDataSourceStr(Din_DebitVoucherForm, Din_DebitVoucherTable));
+
+        // Ensure the latest data is retrieved from the database
+        dinDebitVoucherTable_ds.executeQuery();
+
+        // Allow edit on the datasource
+        dinDebitVoucherTable_ds.allowEdit(true);
+
+        // Get the current record from the datasource
+        Din_DebitVoucherTable dinDebitVoucherTable = dinDebitVoucherTable_ds.cursor();
+
+        if (dinDebitVoucherTable)
+        {
+            // Set fields to values you want to display, but do not persist to DB
+            dinDebitVoucherTable.Amount = 1;  // Set numeric field to a desired value
+            dinDebitVoucherTable.StoreName = "";  // Set string field to empty string (null equivalent in AX)
+            dinDebitVoucherTable.PurposeOfPayment = "";
+            dinDebitVoucherTable.Approval = "";
+            dinDebitVoucherTable.PaidTo = "";
+            dinDebitVoucherTable.ReceiversName = "";
+
+            // DO NOT call write() to prevent inserting or updating the DB
+            // dinDebitVoucherTable_ds.write(); // Remove this line to prevent DB insert
+        }
+
+        // Set all datasource fields to non-editable (if needed)
+        allowEditFieldsOnFormDS_W(dinDebitVoucherTable_ds, false);
+
+        // Allow edit on custom fields only
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, Amount)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, StoreName)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, PurposeOfPayment)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, Approval)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, PaidTo)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, ReceiversName)).allowEdit(true);
+
+        // Refresh the datasource to reflect changes in the form's UI
+        dinDebitVoucherTable_ds.refresh();
+    }
+}

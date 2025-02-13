@@ -1,0 +1,66 @@
+[Form]
+public class Din_DebitVoucherForm extends FormRun
+{
+    // Define the data source class within the form
+    [DataSource]
+    class Din_DebitVoucherTable
+    {
+        // Define a method to create a new debit voucher
+        public void create(boolean _append = false)
+        {
+            DebitVoucherNumberEDT   debitVoucherNumberEDT;
+            NumberSequenceReference numberSequenceReference;
+            NumberSeq numberSeq;
+            Din_DebitVoucherTable    dinDebitVoucherTable;
+
+            // Check if the DebitVoucherNumber is not set (indicating it's a new record)
+            if (!dinDebitVoucherTable.DebitVoucherNumber) // This ensures create is triggered only when it's a new record
+            {
+                super(_append);
+
+                // Look for the number sequence reference using the extended data type
+                numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(DebitVoucherNumberEDT));
+
+                if (numberSequenceReference)
+                {
+                    // Generate a new number for the debit voucher from the sequence
+                    debitVoucherNumberEDT = NumberSeq::newGetNum(numberSequenceReference).num();
+
+                    // Assign the generated number to the table field and set the current date
+                    dinDebitVoucherTable.DebitVoucherNumber = debitVoucherNumberEDT;
+                    dinDebitVoucherTable.CreatedDate = systemDateGet();
+                }
+            }
+        }
+
+        // Define a data field for StoreName with a lookup method
+        [DataField]
+        class StoreName
+        {
+            public void lookup(FormControl _formControl, str _filterStr)
+            {
+                Query query = new Query();
+                QueryBuildDataSource queryBuildDataSource;
+                SysTableLookup sysTableLookup;
+                ;
+
+                // Define the lookup on the InventLocation table
+                sysTableLookup = SysTableLookup::newParameters(tablenum(InventLocation), _formControl);
+
+                // Add fields to the lookup display
+                sysTableLookup.addLookupfield(fieldnum(InventLocation, InventLocationId), false);
+                sysTableLookup.addLookupfield(fieldnum(InventLocation, Name), true);
+
+                // Create a query and add a range to filter by InventLocationType
+                queryBuildDataSource = query.addDataSource(tablenum(InventLocation));
+                queryBuildDataSource.addRange(fieldnum(InventLocation, InventLocationType)).value(SysQuery::value(InventLocationType::Standard));
+
+                // Set the query and perform the lookup
+                sysTableLookup.parmQuery(query);
+                sysTableLookup.performFormLookup();
+            }
+        }
+    }
+}
+
+

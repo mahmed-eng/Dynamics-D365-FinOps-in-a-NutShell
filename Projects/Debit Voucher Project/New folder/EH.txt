@@ -1,0 +1,83 @@
+internal final class Din_DebitVoucherOnInitializedEventHandler
+{
+    [FormEventHandler(formStr(Din_DebitVoucherForm), FormEventType::Initialized)]
+    public static void Din_DebitVoucherForm_OnInitialized(xFormRun sender, FormEventArgs e)
+    {
+        // Set the form to edit mode
+        sender.design().viewEditMode(ViewEditMode::Edit);
+
+        // Get the form's primary datasource
+        FormDataSource dinDebitVoucherTable_ds = sender.dataSource(formDataSourceStr(Din_DebitVoucherForm, Din_DebitVoucherTable));
+        
+        // Ensure the latest data is retrieved from the database
+        dinDebitVoucherTable_ds.executeQuery();
+        
+        // Allow edit on the datasource
+        dinDebitVoucherTable_ds.allowEdit(true);
+
+        // Create a new record
+        if (!dinDebitVoucherTable_ds.cursor() || dinDebitVoucherTable_ds.cursor().RecId == 0)
+        {
+            dinDebitVoucherTable_ds.create(true);
+        }
+        Din_DebitVoucherTable dinDebitVoucherTable = dinDebitVoucherTable_ds.cursor();
+        
+        if (dinDebitVoucherTable)
+        {
+            // Get the latest DebitVoucherNumber from the last record
+            str lastDebitVoucherNumber = '';
+            int lastVoucherNumberInt = 0;
+            str prefix = "VR-";
+
+            select maxof(DebitVoucherNumber) from dinDebitVoucherTable;
+            lastDebitVoucherNumber = dinDebitVoucherTable.DebitVoucherNumber;
+
+            if (strStartsWith(lastDebitVoucherNumber, prefix))
+            {
+                str numericPart = subStr(lastDebitVoucherNumber, strLen(prefix) + 1, strLen(lastDebitVoucherNumber) - strLen(prefix));
+                try
+                {
+                    lastVoucherNumberInt = str2Int(numericPart);
+                }
+                catch
+                {
+                    info("Invalid Voucher Number format");
+                    return;
+                }
+            }
+            
+            // Increment the number
+            lastVoucherNumberInt += 1;
+            str paddedNumber = int2Str(lastVoucherNumberInt);
+            int paddedLength = 9 - strLen(paddedNumber);
+            while (paddedLength > 0)
+            {
+                paddedNumber = "0" + paddedNumber;
+                paddedLength--;
+            }
+            
+            // Assign values to the new record
+            dinDebitVoucherTable.DebitVoucherNumber = prefix + paddedNumber;
+            dinDebitVoucherTable.Amount = 0;
+            dinDebitVoucherTable.StoreName = "";
+            dinDebitVoucherTable.PurposeOfPayment = "";
+            dinDebitVoucherTable.Approval = "";
+            dinDebitVoucherTable.PaidTo = "";
+            dinDebitVoucherTable.ReceiversName = "";
+
+            // Set all fields to non-editable initially
+            allowEditFieldsOnFormDS_W(dinDebitVoucherTable_ds, false);
+            
+            // Allow edit on selected fields
+            dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, Amount)).allowEdit(true);
+            dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, StoreName)).allowEdit(true);
+            dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, PurposeOfPayment)).allowEdit(true);
+            dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, Approval)).allowEdit(true);
+            dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, PaidTo)).allowEdit(true);
+            dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, ReceiversName)).allowEdit(true);
+        }
+
+        // Refresh the datasource to reflect changes in the UI
+        dinDebitVoucherTable_ds.refresh();
+    }
+}

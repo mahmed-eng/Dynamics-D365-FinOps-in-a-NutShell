@@ -1,0 +1,55 @@
+[Form]
+public class Din_DebitVoucherForm extends FormRun
+{
+    [DataSource]
+    class Din_DebitVoucherTable
+    {
+        // Override the create method to generate a unique voucher number
+        public void create(boolean _append = false)
+        {
+            DebitVoucherNumberEDT   debitVoucherNumberEDT;
+            NumberSeq numberSeq;
+            NumberSequenceReference numberSequenceReference;
+
+            super(_append); // Ensures proper form record creation            
+
+            // Look for the number sequence reference using the extended data type
+            numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(DebitVoucherNumberEDT));
+
+            if (numberSequenceReference)
+            {
+                debitVoucherNumberEDT = NumberSeq::newGetNum(numberSequenceReference).num();
+                Din_DebitVoucherTable.DebitVoucherNumber = debitVoucherNumberEDT;
+               
+            }
+
+            Din_DebitVoucherTable.CreatedDate = systemDateGet();
+        }
+
+        [DataField]
+        class StoreName
+        {
+            public void lookup(FormControl _formControl, str _filterStr)
+            {
+                Query query = new Query();
+                QueryBuildDataSource queryBuildDataSource;
+                SysTableLookup sysTableLookup;
+
+                // Define the lookup on the InventLocation table
+                sysTableLookup = SysTableLookup::newParameters(tablenum(InventLocation), _formControl);
+
+                // Add lookup fields
+                sysTableLookup.addLookupfield(fieldnum(InventLocation, InventLocationId), false);
+                sysTableLookup.addLookupfield(fieldnum(InventLocation, Name), true);
+
+                // Create a query and filter by InventLocationType
+                queryBuildDataSource = query.addDataSource(tablenum(InventLocation));
+                queryBuildDataSource.addRange(fieldnum(InventLocation, InventLocationType)).value(SysQuery::value(InventLocationType::Standard));
+
+                // Set the query and perform the lookup
+                sysTableLookup.parmQuery(query);
+                sysTableLookup.performFormLookup();
+            }
+        }
+    }
+}

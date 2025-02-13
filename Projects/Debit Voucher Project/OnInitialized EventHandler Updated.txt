@@ -1,0 +1,93 @@
+internal final class Din_DebitVoucherOnInitializedEventHandler
+{
+    [FormEventHandler(formStr(Din_DebitVoucherForm), FormEventType::Initialized)]
+    public static void Din_DebitVoucherForm_OnInitialized(xFormRun sender, FormEventArgs e)
+    {
+        // Set the form to edit mode
+        sender.design().viewEditMode(ViewEditMode::Edit);
+
+        //sender.design().showNewButton(false);
+
+        // Get the form's primary datasource
+        FormDataSource dinDebitVoucherTable_ds = sender.dataSource(formDataSourceStr(Din_DebitVoucherForm, Din_DebitVoucherTable));
+
+        // Ensure the latest data is retrieved from the database
+        dinDebitVoucherTable_ds.executeQuery();
+
+        // Allow edit on the datasource
+        dinDebitVoucherTable_ds.allowEdit(true);
+
+        // Get the current record from the datasource
+        Din_DebitVoucherTable dinDebitVoucherTable = dinDebitVoucherTable_ds.cursor();
+
+        if (dinDebitVoucherTable)
+        {
+            // Get the current DebitVoucherNumber value (string)
+            str currentDebitVoucherNumber = dinDebitVoucherTable.DebitVoucherNumber;
+            int debitVoucherNumberInt = 0;  // Initialize to zero
+
+            // Find the numeric part of the string by removing the prefix ("VR-" in this case)
+            str prefix = "VR-";
+            str numericPart = currentDebitVoucherNumber;
+
+            // Ensure the number part follows the prefix
+            if (strStartsWith(currentDebitVoucherNumber, prefix))
+            {
+                numericPart = subStr(currentDebitVoucherNumber, strLen(prefix) + 1, strLen(currentDebitVoucherNumber) - strLen(prefix));
+            }
+
+            // Try to convert the numeric part to an integer (if possible)
+            try
+            {
+                debitVoucherNumberInt = str2Int(numericPart);  // Safely convert to integer
+            }
+            catch
+            {
+                info("Invalid DebitVoucherNumber format");
+                return;  // Exit if the conversion fails
+            }
+
+            // Increment the numeric value by 1
+            debitVoucherNumberInt += 1;
+
+            // Convert the number back to string, and manually pad with leading zeros to ensure 9 digits
+            str paddedNumber = int2Str(debitVoucherNumberInt);  // Convert to string without padding
+            int paddedLength = 9 - strLen(paddedNumber);         // Calculate how much padding is needed
+
+            // Add leading zeros to make it 9 digits long
+            while (paddedLength > 0)
+            {
+                paddedNumber = "0" + paddedNumber;
+                paddedLength--;
+            }
+
+            // Rebuild the final DebitVoucherNumber string with the prefix and the padded number
+            dinDebitVoucherTable.DebitVoucherNumber = prefix + paddedNumber;
+
+            // Set other fields as needed
+            dinDebitVoucherTable.Amount = 0;  // Set numeric field to a desired value
+            dinDebitVoucherTable.StoreName = "";  // Set string field to empty string (null equivalent in AX)
+            dinDebitVoucherTable.PurposeOfPayment = "";
+            dinDebitVoucherTable.Approval = "";
+            dinDebitVoucherTable.PaidTo = "";
+            dinDebitVoucherTable.ReceiversName = "";
+
+            // DO NOT call write() to prevent inserting or updating the DB
+            // dinDebitVoucherTable_ds.write(); // Do not persist changes to DB
+        }
+
+        // Set all datasource fields to non-editable (if needed)
+        allowEditFieldsOnFormDS_W(dinDebitVoucherTable_ds, false);
+
+        // Allow edit on custom fields only
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, Amount)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, StoreName)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, PurposeOfPayment)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, Approval)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, PaidTo)).allowEdit(true);
+        dinDebitVoucherTable_ds.object(fieldNum(Din_DebitVoucherTable, ReceiversName)).allowEdit(true);
+
+        // Refresh the datasource to reflect changes in the form's UI
+        dinDebitVoucherTable_ds.refresh();
+    }
+}

@@ -1,0 +1,17 @@
+internal class Din_DebitVoucherOnActivatedEventHandler
+{
+
+    [FormEventHandler(formStr(Din_DebitVoucherForm), FormEventType::Activated)]
+    public static void Din_DebitVoucherForm_OnActivated(xFormRun sender, FormEventArgs e)
+    {
+        FormDataSource dinDebitVoucherTempTable_ds = sender.dataSource("Din_DebitVoucherTempTable");
+        FormRun element = sender;
+        FormControl myNewButton = element.design().controlName("FormButtonControl1");
+
+        if (myNewButton)
+        {
+            myNewButton.enabled(false);
+        }
+      
+    } 
+}
