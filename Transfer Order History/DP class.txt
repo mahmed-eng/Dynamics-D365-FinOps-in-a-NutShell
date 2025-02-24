@@ -1,0 +1,107 @@
+[SRSReportParameterAttribute(classstr(DIN_TransferOrderHistoryContract))]
+class DIN_TransferOrderHistoryDP extends SrsReportDataProviderPreProcessTempDB
+{
+    DIN_TransferOrderHistoryTable    din_TransferOrderHistoryTable;
+
+    [SRSReportDataSetAttribute(tablestr(DIN_TransferOrderHistoryTable))]
+    public DIN_TransferOrderHistoryTable getTransferOrderHistoryTable()
+    {
+        select din_TransferOrderHistoryTable;
+        return din_TransferOrderHistoryTable;
+    }
+
+    public void processReport()
+    {
+        DIN_TransferOrderHistoryContract        contract;
+        Transdate                               fromDate, toDate;
+        InventTransferTable                     inventTransferTable;
+        InventTransferLine                      inventTransferLine;
+        InventTransferJour                      inventTransferJour,inventTransferJour1;
+        HcmWorker                               hcmWorker;
+        DirPersonName                           dirPersonName;
+        InventTransferJourLine                  inventTransferJourLine;
+        contract = this.parmDataContract() as DIN_TransferOrderHistoryContract;
+                
+        fromDate        = contract.parmFromDate();
+        toDate          = contract.parmToDate();              
+       
+        utcDateTime fromDateTime = DateTimeUtil::newDateTime(fromDate, 0);
+        utcDateTime toDateTime = DateTimeUtil::newDateTime(toDate, 86400 - 1);
+
+        while select * from inventTransferTable
+            where inventTransferTable.CreatedDateTime >= fromDateTime &&
+            inventTransferTable.CreatedDateTime <= toDateTime 
+        {
+        
+            din_TransferOrderHistoryTable.clear();
+            din_TransferOrderHistoryTable.DIN_TransferNumber        = inventTransferTable.TransferId;
+            din_TransferOrderHistoryTable.DIN_TransferStatus   =  inventTransferTable.TransferStatus;
+            din_TransferOrderHistoryTable.DIN_CreatedBy   =  inventTransferTable.CreatedBy;
+            din_TransferOrderHistoryTable.DIN_FromWarehouse   =  inventTransferTable.INVENTLOCATIONIDFROM;
+            din_TransferOrderHistoryTable.DIN_ToWarehouse   =  inventTransferTable.INVENTLOCATIONIDTO;
+            din_TransferOrderHistoryTable.DIN_CreatedDate   =  inventTransferTable.CREATEDDATETIME;
+            din_TransferOrderHistoryTable.DIN_ApprovedBy = inventTransferTable.DIN_ApprovedBy;
+                
+            select * from inventTransferLine where inventTransferLine.TransferId == din_TransferOrderHistoryTable.DIN_TransferNumber;
+            {
+                din_TransferOrderHistoryTable.DIN_ShpQty = inventTransferLine.QtyShipped;
+                din_TransferOrderHistoryTable.DIN_TrfQty = inventTransferLine.QTYTRANSFER;
+                din_TransferOrderHistoryTable.DIN_RecQty = inventTransferLine.QTYRECEIVED;
+            }
+
+            select firstOnly inventTransferJour
+                order by inventTransferJour.TransDate desc
+                where inventTransferJour.TransferId == din_TransferOrderHistoryTable.DIN_TransferNumber && inventTransferJour.UpdateType == 0;
+
+                din_TransferOrderHistoryTable.DIN_UpdateType = inventTransferJour.UpdateType;
+                din_TransferOrderHistoryTable.DIN_ShipmentCreatedDate = inventTransferJour.TransDate;
+
+                if(inventTransferJour.CreatedBy == 'RetailServiceAccount')
+                {
+                    select * from hcmWorker where hcmWorker.RecId == inventTransferJour.UpdatedByWorker;
+                    {
+                        din_TransferOrderHistoryTable.DIN_ShipmentCreatedBy  = hcmWorker.PersonnelNumber;
+
+                        select * from dirPersonName where dirPersonName.Person == hcmWorker.Person;
+                        {
+                            din_TransferOrderHistoryTable.DIN_WorkerName = dirPersonName.FirstName;
+                        }
+                    }
+                }
+
+                else
+                {
+                    din_TransferOrderHistoryTable.DIN_WorkerName = inventTransferJour.CreatedBy;
+                }
+            
+            select firstOnly inventTransferJour1
+                //order by inventTransferJour1.TransDate desc
+                where inventTransferJour1.TransferId == din_TransferOrderHistoryTable.DIN_TransferNumber && inventTransferJour1.UpdateType == 1;
+            
+                din_TransferOrderHistoryTable.DIN_UpdateTypeRec = inventTransferJour1.UpdateType;
+            din_TransferOrderHistoryTable.DIN_ShipmentReceivedDate = inventTransferJour1.TransDate;
+
+                if(inventTransferJour1.CreatedBy == 'RetailServiceAccount')
+                {
+                    select * from hcmWorker where hcmWorker.RecId == inventTransferJour1.UpdatedByWorker;
+                    {
+                        din_TransferOrderHistoryTable.DIN_ShipmentReceivedBy  = hcmWorker.PersonnelNumber;
+
+                        select * from dirPersonName where dirPersonName.Person == hcmWorker.Person;
+                        {
+                            din_TransferOrderHistoryTable.DIN_WorkerNameRec = dirPersonName.FirstName;
+                        }
+                    }
+                }
+                else
+                {
+                    din_TransferOrderHistoryTable.DIN_WorkerNameRec = inventTransferJour1.CreatedBy;
+                }                       
+
+            din_TransferOrderHistoryTable.insert();
+        
+        }            
+        
+    }
+
+}

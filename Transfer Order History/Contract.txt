@@ -1,0 +1,24 @@
+[DataContractAttribute]
+class DIN_TransferOrderHistoryContract
+{
+    Transdate fromDate;
+    TransDate todate;
+    //utcdatetime  fromDate;
+    //utcdatetime todate;
+    
+    
+    [DataMemberAttribute('FromDate'),SysOperationLabelAttribute("From Date")]
+    public FromDate ParmFromDate(FromDate _FromDate = FromDate)
+    {
+        FromDate = _FromDate;
+        return FromDate;
+    }
+
+    [DataMemberAttribute('ToDate'),SysOperationLabelAttribute("To Date")]
+    public ToDate ParmToDate(ToDate _ToDate = ToDate)
+    {
+        ToDate = _ToDate;
+        return ToDate;
+    }
+
+}
