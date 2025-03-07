@@ -1,0 +1,32 @@
+ public boolean modified()
+        {
+            boolean ret;
+            super();
+
+            FormStringControl ItemIdControl = this as FormStringControl;
+            FormDataSource transferRequisitionDS = this.formRun().dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+
+            INVENTITEMBARCODE InventItemBarcode;
+            INVENTDIM InventDim;
+
+            str ItemId = ItemIdControl.valueStr();
+
+            if (ItemId)
+            {
+                select firstonly InventItemBarcode
+                where InventItemBarcode.ITEMID == ItemId;
+
+                if (InventItemBarcode)
+                {
+                    select firstonly InventDim
+                    where InventDim.INVENTDIMID == InventItemBarcode.INVENTDIMID;
+
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_BarCode)) = InventItemBarcode.ITEMBARCODE;
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Size)) = InventDim.INVENTSIZEID;
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Color)) = InventDim.INVENTCOLORID;
+                }
+            }
+
+            ret = super();
+            return ret;
+        }
