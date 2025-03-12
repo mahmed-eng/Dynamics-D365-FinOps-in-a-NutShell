@@ -1,0 +1,78 @@
+    [Control("Button")]
+    class PostButton
+    {
+        public void clicked()
+        {
+            super();
+
+            FormDataSource ds;
+            boolean success = true;
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+
+            if (!ds.cursor())
+            {
+                error("No records to post.");
+                return;
+            }
+
+            try
+            {
+                ds.first();
+                while (ds.cursor())
+                {
+                    DIN_TransferOrderRequisitionTmpTable dinTransferOrderRequisitionTmpTable = ds.cursor();
+                    DIN_TransferOrderRequisitionTable dinTransferOrderRequisitionTable;
+
+                    if (!dirTransOrderRefEDTGlobal)
+                    {
+                        NumberSequenceReference numberSequenceReference;
+                        numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(DirTransOrderRefEDT));
+
+                        if (numberSequenceReference)
+                        {
+                            dirTransOrderRefEDTGlobal = NumberSeq::newGetNum(numberSequenceReference).num();
+                        }
+                    }
+
+                    dinTransferOrderRequisitionTable.clear();
+                    dinTransferOrderRequisitionTable.DIN_Store = dinTransferOrderRequisitionTmpTable.DIN_Store;
+                    dinTransferOrderRequisitionTable.DIN_DeliveredTo = dinTransferOrderRequisitionTmpTable.DIN_DeliveredTo;
+                    dinTransferOrderRequisitionTable.DIN_Item = dinTransferOrderRequisitionTmpTable.DIN_Item;
+                    dinTransferOrderRequisitionTable.DIN_Color = dinTransferOrderRequisitionTmpTable.DIN_Color;
+                    dinTransferOrderRequisitionTable.DIN_Size = dinTransferOrderRequisitionTmpTable.DIN_Size;
+                    dinTransferOrderRequisitionTable.DIN_Qty = dinTransferOrderRequisitionTmpTable.DIN_Qty;
+                    dinTransferOrderRequisitionTable.DIN_BarCode = dinTransferOrderRequisitionTmpTable.DIN_BarCode;
+                    dinTransferOrderRequisitionTable.DIN_AccountFor = dinTransferOrderRequisitionTmpTable.DIN_AccountFor;
+                    dinTransferOrderRequisitionTable.DIN_DirectorName = dinTransferOrderRequisitionTmpTable.DIN_DirectorName;
+                    dinTransferOrderRequisitionTable.DIN_DirectorTransferOrderReferenceNumber = dirTransOrderRefEDTGlobal;
+
+                    dinTransferOrderRequisitionTable.insert();
+                    dinTransferOrderRequisitionTmpTable.delete();
+                    dinTransferOrderRequisitionTmpTable.clear();
+
+                    ds.next();
+                }
+               
+                
+            }
+            catch (Exception::Error)
+            {
+                ttsAbort;
+                success = false;
+                error("An error occurred while posting records. Transaction rolled back.");
+            }
+
+            if (success)
+            {                
+                //this.formRun().dataSource().init();
+                //this.formRun().dataSource().research();
+                //this.formRun().dataSource().refresh();
+                //ds.executeQuery();
+                new MenuFunction(menuItemDisplayStr(DIN_TransferOrderRequisitionDisplayMenuItem), MenuItemType::Display).run();
+            }
+
+
+        }
+
+
+    }
