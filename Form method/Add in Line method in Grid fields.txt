@@ -1,0 +1,57 @@
+ [Control("Button")]
+    class FormButtonControl1
+    {
+        public void clicked()
+        {
+            FormDataSource ds;
+            str     StoreName, Deliveredto, DirRefNo;
+            EnumId  accountfor, directorname;
+            str     BarCode, Size, Color;
+            Qty     Qty;
+
+            super();
+  
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+    
+            if (ds.cursor())
+            {
+                StoreName = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Store));
+                Deliveredto = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DeliveredTo));
+                accountfor = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_AccountFor));
+                directorname = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorName));
+                DirRefNo = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorTransferOrderReferenceNumber));
+
+                BarCode = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_BarCode));
+                Size = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Size));
+                Color = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Color));
+                Qty = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Qty));
+            }
+            else
+            {
+                error("No record selected in the temporary table.");
+                return;
+            }
+
+            //if (!StoreName || !directorname || !Deliveredto || !accountfor)
+            //{
+            //    error("Please fill in Director, Delivered To, and Account For before adding a new line.");
+            //    return;
+            //}
+
+            //if (BarCode == '' || Size == '' || Color == '' || Qty == 0.0)
+            //{
+            //    error("Please fill in Barcode, Size, Color, and Quantity before adding another line.");
+            //    return;
+            //}
+
+            ds.create(true);
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Store)) = StoreName;
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DeliveredTo)) = Deliveredto;
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_AccountFor)) = accountfor;
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorName)) = directorname;
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorTransferOrderReferenceNumber)) = DirRefNo;
+
+            //info("Line added successfully.");
+        }
+
+    }
