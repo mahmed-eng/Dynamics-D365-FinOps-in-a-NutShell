@@ -1,0 +1,44 @@
+ [Control("String")]
+    class DIN_TransferOrderRequisitionTmpTable_DIN_BarCode
+    {
+        public boolean modified()
+        {
+            boolean ret;
+            super();
+
+            FormStringControl barcodeIdControl = this as FormStringControl;
+            FormDataSource transferRequisitionDS = this.formRun().dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+
+            INVENTITEMBARCODE InventItemBarcode;
+            INVENTDIM InventDim;
+
+            str barcodeId = barcodeIdControl.valueStr();
+
+            if (barcodeId)
+            {
+                select firstonly InventItemBarcode
+                where InventItemBarcode.ITEMBARCODE == barcodeId
+                join firstonly InventDim
+                where InventDim.INVENTDIMID == InventItemBarcode.INVENTDIMID;
+
+                if (InventItemBarcode)
+                {
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Item)) = InventItemBarcode ? InventItemBarcode.itemId : "";
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Size)) = InventDim ? InventDim.INVENTSIZEID : "";
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Color)) = InventDim ? InventDim.INVENTCOLORID : "";
+                }
+                else
+                {
+                    warning("Barcode not found in the system.");
+                }
+            }
+            else
+            {
+                warning("Please enter a valid barcode.");
+            }
+
+            ret = super();
+            return ret;
+        }
+
+    }
