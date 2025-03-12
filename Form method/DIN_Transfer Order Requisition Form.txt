@@ -1,0 +1,221 @@
+[Form]
+public class DIN_TransferOrderRequisitionForm extends FormRun
+{
+    DirTransOrderRefEDT dirTransOrderRefEDTGlobal;
+
+    public void init()
+    {
+        super();
+
+        if (!dirTransOrderRefEDTGlobal)
+        {
+            NumberSequenceReference numberSequenceReference;
+            numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(DirTransOrderRefEDT));
+
+            if (numberSequenceReference)
+            {
+                dirTransOrderRefEDTGlobal = NumberSeq::newGetNum(numberSequenceReference).num();
+            }
+        }
+    }
+
+    [DataSource]
+    class DIN_TransferOrderRequisitionTmpTable
+    {
+        public void create(boolean _append = false)
+        {
+            DIN_TransferOrderRequisitionTmpTable_ds.research();
+
+            super(_append);
+
+            if (dirTransOrderRefEDTGlobal)
+            {
+                DIN_TransferOrderRequisitionTmpTable.DIN_DirectorTransferOrderReferenceNumber = dirTransOrderRefEDTGlobal;
+            }
+        }
+
+    }
+
+    [Control("Button")]
+    class PostButton
+    {
+        public void clicked()
+        {
+            super();
+
+            FormDataSource ds;
+            boolean success = true;
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+
+            if (!ds.cursor())
+            {
+                error("No records to post.");
+                return;
+            }
+
+            try
+            {
+                ds.first();
+                while (ds.cursor())
+                {
+                    DIN_TransferOrderRequisitionTmpTable dinTransferOrderRequisitionTmpTable = ds.cursor();
+                    DIN_TransferOrderRequisitionTable dinTransferOrderRequisitionTable;
+
+                    if (!dirTransOrderRefEDTGlobal)
+                    {
+                        NumberSequenceReference numberSequenceReference;
+                        numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(DirTransOrderRefEDT));
+
+                        if (numberSequenceReference)
+                        {
+                            dirTransOrderRefEDTGlobal = NumberSeq::newGetNum(numberSequenceReference).num();
+                        }
+                    }
+
+                    dinTransferOrderRequisitionTable.clear();
+                    dinTransferOrderRequisitionTable.DIN_Store = dinTransferOrderRequisitionTmpTable.DIN_Store;
+                    dinTransferOrderRequisitionTable.DIN_DeliveredTo = dinTransferOrderRequisitionTmpTable.DIN_DeliveredTo;
+                    dinTransferOrderRequisitionTable.DIN_Item = dinTransferOrderRequisitionTmpTable.DIN_Item;
+                    dinTransferOrderRequisitionTable.DIN_Color = dinTransferOrderRequisitionTmpTable.DIN_Color;
+                    dinTransferOrderRequisitionTable.DIN_Size = dinTransferOrderRequisitionTmpTable.DIN_Size;
+                    dinTransferOrderRequisitionTable.DIN_Qty = dinTransferOrderRequisitionTmpTable.DIN_Qty;
+                    dinTransferOrderRequisitionTable.DIN_BarCode = dinTransferOrderRequisitionTmpTable.DIN_BarCode;
+                    dinTransferOrderRequisitionTable.DIN_AccountFor = dinTransferOrderRequisitionTmpTable.DIN_AccountFor;
+                    dinTransferOrderRequisitionTable.DIN_DirectorName = dinTransferOrderRequisitionTmpTable.DIN_DirectorName;
+                    dinTransferOrderRequisitionTable.DIN_DirectorTransferOrderReferenceNumber = dirTransOrderRefEDTGlobal;
+
+                    dinTransferOrderRequisitionTable.insert();
+                    dinTransferOrderRequisitionTmpTable.delete();
+                    dinTransferOrderRequisitionTmpTable.clear();
+
+                    ds.next();
+                }
+               
+                
+            }
+            catch (Exception::Error)
+            {
+                ttsAbort;
+                success = false;
+                error("An error occurred while posting records. Transaction rolled back.");
+            }
+
+            if (success)
+            {                
+                //this.formRun().dataSource().init();
+                //this.formRun().dataSource().research();
+                //this.formRun().dataSource().refresh();
+                //ds.executeQuery();
+                new MenuFunction(menuItemDisplayStr(DIN_TransferOrderRequisitionDisplayMenuItem), MenuItemType::Display).run();
+            }
+
+
+        }
+
+
+    }
+
+    [Control("Button")]
+    class FormButtonControl1
+    {
+        public void clicked()
+        {
+            FormDataSource ds;
+            str     StoreName, Deliveredto, DirRefNo;
+            EnumId  accountfor, directorname;
+            str     BarCode, Size, Color;
+            Qty     Qty;
+
+            super();
+  
+            ds = this.formRun().dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+    
+            if (ds.cursor())
+            {
+                StoreName = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Store));
+                Deliveredto = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DeliveredTo));
+                accountfor = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_AccountFor));
+                directorname = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorName));
+                DirRefNo = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorTransferOrderReferenceNumber));
+
+                BarCode = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_BarCode));
+                Size = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Size));
+                Color = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Color));
+                Qty = ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Qty));
+            }
+            else
+            {
+                error("No record selected in the temporary table.");
+                return;
+            }
+
+            //if (!StoreName || !directorname || !Deliveredto || !accountfor)
+            //{
+            //    error("Please fill in Director, Delivered To, and Account For before adding a new line.");
+            //    return;
+            //}
+
+            //if (BarCode == '' || Size == '' || Color == '' || Qty == 0.0)
+            //{
+            //    error("Please fill in Barcode, Size, Color, and Quantity before adding another line.");
+            //    return;
+            //}
+
+            ds.create(true);
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Store)) = StoreName;
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DeliveredTo)) = Deliveredto;
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_AccountFor)) = accountfor;
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorName)) = directorname;
+            ds.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorTransferOrderReferenceNumber)) = DirRefNo;
+
+            //info("Line added successfully.");
+        }
+
+    }
+
+    [Control("String")]
+    class DIN_TransferOrderRequisitionTmpTable_DIN_BarCode
+    {
+        public boolean modified()
+        {
+            boolean ret;
+            super();
+
+            FormStringControl barcodeIdControl = this as FormStringControl;
+            FormDataSource transferRequisitionDS = this.formRun().dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+
+            INVENTITEMBARCODE InventItemBarcode;
+            INVENTDIM InventDim;
+
+            str barcodeId = barcodeIdControl.valueStr();
+
+            if (barcodeId)
+            {
+                select firstonly InventItemBarcode
+                where InventItemBarcode.ITEMBARCODE == barcodeId
+                join firstonly InventDim
+                where InventDim.INVENTDIMID == InventItemBarcode.INVENTDIMID;
+
+                if (InventItemBarcode)
+                {
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Item)) = InventItemBarcode ? InventItemBarcode.itemId : "";
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Size)) = InventDim ? InventDim.INVENTSIZEID : "";
+                    transferRequisitionDS.cursor().(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Color)) = InventDim ? InventDim.INVENTCOLORID : "";
+                }
+                else
+                {
+                    warning("Barcode not found in the system.");
+                }
+            }
+            else
+            {
+                warning("Please enter a valid barcode.");
+            }
+
+            ret = super();
+            return ret;
+        }
+
+    }
+
+}
