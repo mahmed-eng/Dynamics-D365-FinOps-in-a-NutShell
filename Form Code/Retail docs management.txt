@@ -1,0 +1,47 @@
+[Form]  
+public class DIN_RetailDocumentsManagementForm extends FormRun  
+{       
+    // Data source for the form  
+    [DataSource]  
+    class DIN_RetailDocumentsManagementTable  
+    {  
+        public void executeQuery()  
+        {  
+            QueryBuildRange qbr;  
+            
+            // Apply filter to show only records with status "Open"  
+            qbr = this.queryBuildDataSource().addRange(fieldNum(DIN_RetailDocumentsManagementTable, Din_Status));  
+            qbr.value(queryValue(DIN_StatusEnum::Open));  
+            
+            super();  
+        }  
+    }  
+
+    // Button control for posting the document  
+    [Control("Button")]  
+    class Post  
+    {  
+        public void clicked()  
+        {  
+            DIN_RetailDocumentsManagementTable dinRetailDoc;  
+
+            // Get the current record from the data source  
+            dinRetailDoc = DIN_RetailDocumentsManagementTable_ds.cursor();  
+
+            // Ensure a valid record is selected before updating  
+            if (dinRetailDoc && dinRetailDoc.RecId)  
+            {  
+                ttsBegin;  
+                dinRetailDoc.SelectForUpdate(true);  
+                dinRetailDoc.Din_Status = DIN_StatusEnum::Posted; // Change status to "Posted"  
+                dinRetailDoc.update();  
+                ttsCommit;  
+            }  
+
+            super();  
+            
+            // Open the related display menu after posting  
+            new MenuFunction(menuItemDisplayStr(DIN_RetailDocumentsManagementDisplayMenuItem), MenuItemType::Display).run();  
+        }  
+    }  
+}  
