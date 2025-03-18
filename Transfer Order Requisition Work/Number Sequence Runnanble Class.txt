@@ -1,0 +1,15 @@
+internal final class DIN_DirectorTransferOrderReferenceRunnableClass
+{
+    public static void main(Args _args)
+    {
+        DIN_DirectorTransferOrderReferenceNumSeq dINDirectorTransferOrderReferenceNumSeq = new DIN_DirectorTransferOrderReferenceNumSeq();
+        dINDirectorTransferOrderReferenceNumSeq.load();
+
+        // Fetch and display the generated number sequence
+        NumberSeq numSeq = NumberSeq::newGetNum(DIN_DirectorTransferOrderReferenceNumSeq::numRefSourcingId());
+        str generatedNumber = numSeq.num();
+        
+        info(strFmt("Generated Director Transfer Order Reference: %1", generatedNumber));
+    }
+
+}

@@ -1,0 +1,35 @@
+public class DIN_DirectorTransferOrderReferenceNumSeq extends NumberSeqApplicationModule
+{
+    protected void loadModule()
+    {
+        NumberSeqDatatype datatype = NumberSeqDatatype::construct();
+  
+        datatype.parmDatatypeId(extendedTypeNum(DirTransOrderRefEDT));
+        datatype.parmReferenceHelp(literalStr("Director Transfer Order Reference ID number sequence"));
+        datatype.parmWizardIsContinuous(true);
+        //datatype.parmWizardIsFetchAhead(8);
+        datatype.parmWizardIsManual(NoYes::No);
+        datatype.parmWizardIsChangeDownAllowed(NoYes::No);
+        datatype.parmWizardIsChangeUpAllowed(NoYes::No);
+        datatype.parmSortField(1);
+        datatype.addParameterType(NumberSeqParameterType::DataArea, true, false);
+        this.create(datatype);
+    }
+
+    public NumberSeqModule numberSeqModule()
+    {
+        return NumberSeqModule::Payroll;
+    }
+
+    [SubscribesTo(classStr(NumberSeqGlobal), delegateStr(NumberSeqGlobal, buildModulesMapDelegate))]
+    public static void buildModulesMapSubscriber(Map _numberSeqModuleNameMap)
+    {
+        NumberSeqGlobal::addModuleToMap(classNum(DIN_DirectorTransferOrderReferenceNumSeq), _numberSeqModuleNameMap);
+    }
+
+    public static NumberSequenceReference numRefSourcingId()
+    {
+        return NumberSeqReference::findReference(extendedTypeNum(DirTransOrderRefEDT));
+    }
+
+}

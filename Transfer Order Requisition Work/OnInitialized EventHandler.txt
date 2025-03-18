@@ -1,0 +1,90 @@
+internal final class DIN_TransferOrderRequisitionOnInitializedEventHandler
+{
+    [FormEventHandler(formStr(DIN_TransferOrderRequisitionForm), FormEventType::Initialized)]
+    public static void DIN_TransferOrderRequisitionForm_OnInitialized(xFormRun sender, FormEventArgs e)
+    {
+        // Set the form to edit mode
+        sender.design().viewEditMode(ViewEditMode::Edit);
+
+        // Get the form's primary datasource
+        FormDataSource transferRequisitionDS = sender.dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+        
+        // Ensure the latest data is retrieved from the database
+        transferRequisitionDS.executeQuery();
+        
+        // Allow edit on the datasource
+        transferRequisitionDS.allowEdit(true);
+
+        // Create a new record if none exists
+        if (!transferRequisitionDS.cursor() || transferRequisitionDS.cursor().RecId == 0)
+        {
+            transferRequisitionDS.create(true);
+        }
+
+        DIN_TransferOrderRequisitionTmpTable transferRequisitionTmpTable = transferRequisitionDS.cursor();
+
+        // Initialize basic fields
+        if (transferRequisitionTmpTable)
+        {
+            transferRequisitionTmpTable.DIN_AccountFor = 0;
+            transferRequisitionTmpTable.DIN_DirectorName = 0;
+            transferRequisitionTmpTable.DIN_Store = "";
+            transferRequisitionTmpTable.DIN_DeliveredTo = "";
+            transferRequisitionTmpTable.DIN_BarCode = "";
+            transferRequisitionTmpTable.DIN_Item = "";
+            transferRequisitionTmpTable.DIN_Color = "";
+            transferRequisitionTmpTable.DIN_Size = "";
+            transferRequisitionTmpTable.DIN_Qty = 0;
+            transferRequisitionDS.write();
+        }
+        else
+        {
+            transferRequisitionDS.create(true);
+            transferRequisitionTmpTable = transferRequisitionDS.cursor();
+
+            if (transferRequisitionTmpTable)
+            {
+                transferRequisitionTmpTable.DIN_AccountFor = 0;
+                transferRequisitionTmpTable.DIN_DirectorName = 0;
+                transferRequisitionTmpTable.DIN_Store = "";
+                transferRequisitionTmpTable.DIN_DeliveredTo = "";
+                transferRequisitionTmpTable.DIN_BarCode = "";
+                transferRequisitionTmpTable.DIN_Item = "";
+                transferRequisitionTmpTable.DIN_Color = "";
+                transferRequisitionTmpTable.DIN_Size = "";
+                transferRequisitionTmpTable.DIN_Qty = 0;
+            }
+        }
+
+        if (transferRequisitionTmpTable)
+        {
+            // Set all fields to non-editable initially
+            allowEditFieldsOnFormDS_W(transferRequisitionDS, false);
+            
+            // Allow edit on selected fields
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Store)).allowEdit(true);
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_AccountFor)).allowEdit(true);
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DeliveredTo)).allowEdit(true);
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_DirectorName)).allowEdit(true);
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_BarCode)).allowEdit(true);
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Item)).allowEdit(true);
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Color)).allowEdit(true);
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Size)).allowEdit(true);
+            transferRequisitionDS.object(fieldNum(DIN_TransferOrderRequisitionTmpTable, DIN_Qty)).allowEdit(true);
+        }
+
+        // Refresh the datasource to reflect changes in the UI
+        transferRequisitionDS.refresh();
+    }
+
+    private static void allowEditFieldsOnFormDS_W(FormDataSource _ds, boolean _allowEdit)
+    {
+        int i;
+        DictTable dictTable = new DictTable(_ds.table());
+        for (i = 1; i <= dictTable.fieldCnt(); i++)
+        {
+            _ds.object(dictTable.fieldCnt2Id(i)).allowEdit(_allowEdit);
+        }
+    }
+
+}

@@ -1,0 +1,24 @@
+public final class DIN_TransferOrderRequisitionBarcodeLookupEventHandler
+{
+    [FormControlEventHandler(formControlStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable_DIN_BarCode), FormControlEventType::Lookup)]
+    public static void DIN_TransferOrderRequisitionTmpTable_DIN_BarCode_OnLookup(FormControl sender, FormControlEventArgs e)
+    {
+        Query                   query;
+        QueryBuildDataSource    qbds;
+        SysTableLookup          sysTableLookup;
+
+        sysTableLookup = SysTableLookup::newParameters(tableNum(INVENTITEMBARCODE), sender);
+
+        query = new Query();
+        qbds = query.addDataSource(tableNum(INVENTITEMBARCODE));
+
+        // Ensure Dep_Name is stored in Dept_Lookup
+        sysTableLookup.addLookupfield(fieldNum(INVENTITEMBARCODE, ITEMBARCODE), true); // TRUE makes this the returned value
+        sysTableLookup.addLookupfield(fieldNum(INVENTITEMBARCODE, ITEMID));
+
+        sysTableLookup.parmQuery(query);
+        sysTableLookup.performFormLookup();
+
+    }
+
+}
