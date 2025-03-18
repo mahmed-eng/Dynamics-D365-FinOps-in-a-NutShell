@@ -1,47 +1,124 @@
-[Form]  
-public class DIN_RetailDocumentsManagementForm extends FormRun  
+[Form]
+public class DIN_RetailDocumentsManagementForm extends FormRun
 {       
-    // Data source for the form  
-    [DataSource]  
-    class DIN_RetailDocumentsManagementTable  
-    {  
-        public void executeQuery()  
-        {  
-            QueryBuildRange qbr;  
-            
-            // Apply filter to show only records with status "Open"  
-            qbr = this.queryBuildDataSource().addRange(fieldNum(DIN_RetailDocumentsManagementTable, Din_Status));  
-            qbr.value(queryValue(DIN_StatusEnum::Open));  
-            
-            super();  
-        }  
-    }  
+    // Method to enable/disable the Remove button based on document status
+    public void updateRemoveButtonState()
+    {
+        DIN_RetailDocumentsManagementTable dinRetailDoc;
+        dinRetailDoc = DIN_RetailDocumentsManagementTable_ds.cursor();
 
-    // Button control for posting the document  
-    [Control("Button")]  
-    class Post  
-    {  
-        public void clicked()  
-        {  
-            DIN_RetailDocumentsManagementTable dinRetailDoc;  
+        // Check if a record exists and its status is Posted
+        if (dinRetailDoc && dinRetailDoc.Din_Status == DIN_StatusEnum::Posted)
+        {
+            // Disable the Remove button if status is Posted
+            BtnRemove.enabled(false);
+        }
+        else
+        {
+            // Enable the Remove button for non-Posted records
+            BtnRemove.enabled(true);
+        }
+    }
 
-            // Get the current record from the data source  
-            dinRetailDoc = DIN_RetailDocumentsManagementTable_ds.cursor();  
+    [DataSource]
+    class DIN_RetailDocumentsManagementTable
+    {
+        // Override the query execution to filter for Open status records only
+        public void executeQuery()
+        {
+            QueryBuildRange qbr;
+    
+            // Add a range to the query to filter by Din_Status field
+            qbr = this.queryBuildDataSource().addRange(fieldNum(DIN_RetailDocumentsManagementTable, Din_Status));
+            // Set the range value to only show records with Open status
+            qbr.value(queryValue(DIN_StatusEnum::Open));
+    
+            // Call the parent class's executeQuery method
+            super();
+        }
 
-            // Ensure a valid record is selected before updating  
-            if (dinRetailDoc && dinRetailDoc.RecId)  
-            {  
-                ttsBegin;  
-                dinRetailDoc.SelectForUpdate(true);  
-                dinRetailDoc.Din_Status = DIN_StatusEnum::Posted; // Change status to "Posted"  
-                dinRetailDoc.update();  
-                ttsCommit;  
-            }  
+        // Override the active method to update UI when a record becomes active
+        public int active()
+        {
+            int ret;
+            // Call the parent class's active method
+            ret = super();
+            // Update the Remove button state when a record is selected
+            element.updateRemoveButtonState();
+            return ret;
+        }
+    }
 
-            super();  
-            
-            // Open the related display menu after posting  
-            new MenuFunction(menuItemDisplayStr(DIN_RetailDocumentsManagementDisplayMenuItem), MenuItemType::Display).run();  
-        }  
-    }  
-}  
+    [Control("Button")]
+    class Post
+    {
+        // Handle the click event for the Post button
+        public void clicked()
+        {
+            DIN_RetailDocumentsManagementTable dinRetailDoc;
+
+            // Get the current record from the datasource
+            dinRetailDoc = DIN_RetailDocumentsManagementTable_ds.cursor();
+
+            // Check if a valid record exists
+            if (dinRetailDoc && dinRetailDoc.RecId)
+            {
+                // Begin a transaction
+                ttsBegin;
+                // Lock the record for update
+                dinRetailDoc.SelectForUpdate(true);
+                // Set the status to Posted
+                dinRetailDoc.Din_Status = DIN_StatusEnum::Posted;
+                // Update the record in the database
+                dinRetailDoc.update();
+                // Commit the transaction
+                ttsCommit;
+            }
+
+            // Call the parent class's clicked method
+            super();
+            // Open the display menu item after posting
+            new MenuFunction(menuItemDisplayStr(DIN_RetailDocumentsManagementDisplayMenuItem), MenuItemType::Display).run();
+        }
+    }
+
+    [Control("Button")]
+    class BtnRemove
+    {
+        // Handle the click event for the Remove button
+        public void clicked()
+        {
+            DIN_RetailDocumentsManagementTable dinRetailDoc;
+            // Get the current record from the datasource
+            dinRetailDoc = DIN_RetailDocumentsManagementTable_ds.cursor();
+
+            // Check if a valid record exists
+            if (dinRetailDoc && dinRetailDoc.RecId)
+            {
+                // Only allow deletion if status is Open
+                if (dinRetailDoc.Din_Status == DIN_StatusEnum::Open)
+                {
+                    // Begin a transaction
+                    ttsBegin;
+                    // Delete the record
+                    dinRetailDoc.delete();
+                    // Commit the transaction
+                    ttsCommit;
+
+                    // Refresh the datasource to reflect the deletion
+                    DIN_RetailDocumentsManagementTable_ds.research();
+                    // Update the Remove button state after deletion
+                    element.updateRemoveButtonState();
+                }
+                else
+                {
+                    // Show info message if trying to delete a non-Open record
+                    info("You can only delete records with status 'Open'.");
+                }
+            }
+
+            // Call the parent class's clicked method
+            super();
+        }
+    }
+}
