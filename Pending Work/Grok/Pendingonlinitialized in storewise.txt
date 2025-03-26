@@ -1,0 +1,85 @@
+private void updateNumberSequencePreview()
+{
+    str lastReferenceNumber = '';
+    int lastReferenceNumberInt = 0;
+    str prefix = "";
+    str numericPart = "";
+    DIN_TransferOrderRequisitionTable lastRecord;
+
+    // Get the last used number from the table
+    select maxof(DIN_DirectorTransferOrderReferenceNumber) from lastRecord;
+
+    if (lastRecord && lastRecord.DIN_DirectorTransferOrderReferenceNumber)
+    {
+        lastReferenceNumber = lastRecord.DIN_DirectorTransferOrderReferenceNumber;
+
+        // Dynamically separate prefix and numeric part
+        int i;
+        boolean foundNumeric = false;
+        for (i = 1; i <= strLen(lastReferenceNumber); i++)
+        {
+            str currentChar = subStr(lastReferenceNumber, i, 1);
+            if (str2Int(currentChar) != 0 || currentChar == "0") // Check if it's a digit
+            {
+                foundNumeric = true;
+                numericPart = subStr(lastReferenceNumber, i, strLen(lastReferenceNumber) - i + 1);
+                prefix = subStr(lastReferenceNumber, 1, i - 1);
+                break;
+            }
+        }
+
+        // If no numeric part is found, treat the whole string as prefix and start with 1
+        if (!foundNumeric)
+        {
+            prefix = lastReferenceNumber;
+            numericPart = "0";
+        }
+
+        // Convert the numeric part to an integer
+        if (numericPart)
+        {
+            try
+            {
+                lastReferenceNumberInt = str2Int(numericPart);
+            }
+            catch
+            {
+                info("Invalid numeric format in Reference Number: " + lastReferenceNumber);
+                lastReferenceNumberInt = 0; // Reset to 0 if conversion fails
+            }
+        }
+    }
+    else
+    {
+        // If no previous record exists, show error and exit
+        info("Number sequence is not generated");
+        nextReferenceNumberPreview = "";
+        return;
+    }
+
+    // Increment the number
+    lastReferenceNumberInt += 1;
+
+    // Format the numeric part with dynamic padding based on the last numeric part's length
+    str paddedNumber = int2Str(lastReferenceNumberInt);
+    int desiredLength = strLen(numericPart) ? strLen(numericPart) : 5; // Use previous length or default to 5
+    int paddedLength = desiredLength - strLen(paddedNumber);
+
+    while (paddedLength > 0)
+    {
+        paddedNumber = "0" + paddedNumber;
+        paddedLength--;
+    }
+
+    // Combine prefix and padded number
+    nextReferenceNumberPreview = prefix + paddedNumber;
+
+    // Update the form's temporary table with the preview
+    FormDataSource ds = this.dataSource(formDataSourceStr(DIN_TransferOrderRequisitionForm, DIN_TransferOrderRequisitionTmpTable));
+    if (ds && ds.cursor())
+    {
+        DIN_TransferOrderRequisitionTmpTable tmpTable = ds.cursor();
+        tmpTable.DIN_DirectorTransferOrderReferenceNumber = nextReferenceNumberPreview;
+        ds.refresh(); // Refresh the UI to display the preview
+    }
+}
