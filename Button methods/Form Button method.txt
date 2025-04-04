@@ -1,0 +1,106 @@
+// Button Click Method:
+private void updateTransferOrderButtonVisibility()
+{
+    InventTransferTable inventTransferTable;
+    boolean isVisible = true;
+   
+    // Get reference number from the summary view
+    str refNum = DIN_IST_TransferOrderSummary_View.DIN_ISTTransOrderRefNumber;
+
+    if (refNum)
+    {
+        // Check if a transfer order already exists with the same reference number
+        select firstOnly inventTransferTable
+            where inventTransferTable.DIN_CurrentISTReferenceNumber == refNum;
+        
+        if (inventTransferTable)
+        {
+            // If exists, hide the button
+            isVisible = false;
+        }
+    }
+
+    // Access both buttons on the form
+    FormControl buttonControl = element.design().controlName("DINCreateTO");
+    FormControl buttonControlReg = element.design().controlName("DINRejecetdTO");
+
+    if (buttonControl)
+    {
+        // Set visibility of both buttons
+        buttonControl.visible(isVisible);
+        buttonControlReg.visible(isVisible);
+    }
+}
+
+private void updateTransferOrderStatusButtonVisibility()
+{
+    DIN_IST_TransferOrderTable dinISTTransferOrderTable;
+    boolean isVisible = true;
+   
+    // Get reference number from the summary view
+    str refNum = DIN_IST_TransferOrderSummary_View.DIN_ISTTRANSORDERREFNUMBER;
+
+    if (refNum)
+    {
+        // Fetch the transfer order using the reference number
+        select firstOnly dinISTTransferOrderTable
+            where dinISTTransferOrderTable.DIN_ISTTRANSORDERREFNUMBER == refNum;
+        
+        // Hide button if the request is either Rejected or Created
+        if (dinISTTransferOrderTable.DIN_ReqStatus == 'Rejected')
+        {
+            isVisible = false;
+        }
+
+        if (dinISTTransferOrderTable.DIN_ReqStatus == 'Created')
+        {
+            isVisible = false;
+        }
+    }
+
+    // Access both buttons on the form
+    FormControl buttonControl = element.design().controlName("DINCreateTO");
+    FormControl buttonControlReg = element.design().controlName("DINRejecetdTO");
+
+    if (buttonControlReg)
+    {
+        // Set visibility of both buttons
+        buttonControl.visible(isVisible);
+        buttonControlReg.visible(isVisible);
+    }
+}
+
+
+[Control("MenuFunctionButton")]
+class DINCreateTO
+{
+    void clicked()
+    {
+        // Create argument to pass the selected record to the menu function
+        Args args = new Args();
+        args.record(DIN_IST_TransferOrderSummary_View);
+
+        // Open the create transfer order action
+        new MenuFunction(menuItemActionStr(DIN_IST_TransferOrderCreateClassActionMenuItem), MenuItemType::Action).run(args);
+        
+        // Open the display view for the transfer order requisition
+        new MenuFunction(menuItemDisplayStr(DIN_IST_TransferOrderRequisitionViewDisplayMenuItem), MenuItemType::Display).run();
+        
+        // Refresh and research the data source to reflect changes
+        DIN_IST_TransferOrderTable_ds.refresh();
+        DIN_IST_TransferOrderTable_ds.research();
+    }
+
+    public void setVisible(boolean _visible)
+    {
+        // Set visibility of both Create and Rejected buttons
+        FormControl buttonControl = element.design().controlName("DINCreateTO");
+        FormControl buttonControlReg = element.design().controlName("DINRejecetdTO");
+
+        if (buttonControl)
+        {
+            buttonControl.visible(_visible);
+            buttonControlReg.visible(_visible);
+        }
+    }
+}
