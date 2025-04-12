@@ -1,0 +1,13 @@
+ [DataSource]
+    class DIN_Nature_Of_Complain_Table
+    {
+
+        public void write()
+        {
+            super();
+
+            // After saving, create a new empty record
+            this.create(true); // Pass true if you want initValue() to run
+        }
+
+    }
