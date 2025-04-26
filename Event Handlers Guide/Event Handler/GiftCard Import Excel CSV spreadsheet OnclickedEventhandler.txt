@@ -1,0 +1,115 @@
+using System.IO;
+using OfficeOpenXml;
+using OfficeOpenXml.ExcelPackage;
+using OfficeOpenXml.ExcelRange;
+
+internal final class RetailGiftCardOnClickedEventHandlerClass
+{
+    [FormControlEventHandler(formControlStr(RetailGiftCardTable, Import_Button), FormControlEventType::Clicked)]
+    public static void Import_Button_OnClicked(FormControl sender, FormControlEventArgs e)
+    {
+        boolean iserror;
+        InventLocationId InventLocationId;
+        ItemBarCode      itemBarCode;
+        Amount qty;
+        DIN_CustomerName   customerName;
+        DIN_Ref_SONumber   sonumber;
+        RetailGiftCardId   retailgiftcardid;
+        System.IO.Stream stream;
+        ExcelSpreadsheetName sheet;
+        FileUploadBuild fileUpload, fileUploadBuild;
+        DialogGroup dialogUploadGroup;
+        FormBuildControl formBuildControl;
+        boolean IsAnyErrorOccured = false; // Declare it only once at the start
+        RetailGiftCardTable retailgiftcard;
+
+        // Create dialog for file upload
+        Dialog dialog = new Dialog("CSV Import");
+        dialogUploadGroup = dialog.addGroup("@SYS54759");
+        formBuildControl = dialog.formBuildDesign().control(dialogUploadGroup.name());
+
+        // Add file upload control
+        fileUploadBuild = formBuildControl.addControlEx(classStr(FileUpload), "UploadCSV");
+        fileUploadBuild.style(FileUploadStyle::MinimalWithFilename);
+        fileUploadBuild.fileTypesAccepted(".csv");
+
+        // Run dialog and get the uploaded file
+        if (dialog.run())
+        {
+            FileUpload fileUploadControl = dialog.formRun().control(fileUploadBuild.id());
+            FileUploadTemporaryStorageResult fileUploadResult = fileUploadControl.getFileUploadResult();
+
+            if (fileUploadResult != null && fileUploadResult.getUploadStatus())
+            {
+                stream = fileUploadResult.openResult();
+
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    int rowCount = 0;
+
+                    while (!reader.EndOfStream)
+                    {
+                        str line = reader.ReadLine(); // Changed to str instead of string
+                        rowCount++;
+
+                        // Skip header row (first row)
+                        if (rowCount == 0)
+                        {
+                            continue;
+                        }
+
+                        // Split the CSV line by commas
+                        container values = str2con(line, ","); // Use container for splitting
+
+                        if (conLen(values) >= 2)
+                        {
+                            // Extract SO_Number and CustomerName from CSV columns
+                            retailgiftcardid = conPeek(values, 1); // Retrieve first element (SO Number)
+                            // Retrieve first element (SO Number)
+                            customerName = conPeek(values, 2); // Retrieve second element (Customer Name)
+                            sonumber = conPeek(values, 3);
+
+                            // Barcode Validations (You can add custom validation here)
+                            select * from retailgiftcard
+                                where retailgiftcard.entryId == retailgiftcardid;
+
+                            if (retailgiftcard)
+                            {
+                                error(strFmt("Row # [%1] found duplicate SO_Number [%2].", rowCount, sonumber), "Retail Gift Card Import");
+                                IsAnyErrorOccured = NoYes::Yes;
+                            }
+
+                            if (!IsAnyErrorOccured)
+                            {
+                                // Insert the data into the RetailGiftCardTable
+                                ttsbegin;
+                                retailgiftcard.entryId = retailgiftcardid;
+                                retailgiftcard.DIN_Ref_SONumber = sonumber;
+                                retailgiftcard.DIN_CustomerName = customerName;
+                                retailgiftcard.CURRENCYCODE = 'PKR';
+                                retailgiftcard.MCRGIFTCARDTYPE = 1;
+
+                                retailgiftcard.insert();
+
+                                ttscommit;
+                            }
+                        }
+                        else
+                        {
+                            error(strFmt("Row # [%1] has insufficient data.", rowCount), "Retail Gift Card Import");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                warning("No file was uploaded or the upload failed.");
+            }
+        }
+
+        // Refresh the form data source
+        FormDataSource DinBarcodeUtility_ds = sender.formRun().dataSource(formDataSourceStr(RetailGiftCardTable, RetailGiftCardTable));
+        DinBarcodeUtility_ds.research(true);
+    }
+
+}
