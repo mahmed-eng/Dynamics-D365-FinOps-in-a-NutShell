@@ -5,14 +5,11 @@ using OfficeOpenXml.Table;
 using OfficeOpenXml.ExcelPackage;
 using OfficeOpenXml.ExcelRange;
 
-
 internal final class RetailGiftCardExportOnClickedEventHandler
 {
-
     [FormControlEventHandler(formControlStr(RetailGiftCardTable, FormButtonControl1), FormControlEventType::Clicked)]
     public static void FormButtonControl1_OnClicked(FormControl sender, FormControlEventArgs e)
     {
-     
         RetailGiftCardTable retailGiftCardTable;
         System.IO.MemoryStream memoryStream = new System.IO.MemoryStream();
 
@@ -32,6 +29,20 @@ internal final class RetailGiftCardExportOnClickedEventHandler
             cell = cells.get_Item(currentRow, 2);
             cell.set_Value("Currency Code");
 
+            cell = cells.get_Item(currentRow, 3);
+            cell.set_Value("Customers");
+
+            cell = cells.get_Item(currentRow, 4);
+            cell.set_Value("SO# NUMBER");
+
+            // Apply background color to header row
+            var headerRange = cells.get_Item("A1:D1");
+            headerRange.get_Style().get_Fill().set_PatternType(OfficeOpenXml.Style.ExcelFillStyle::Solid);
+            headerRange.get_Style().get_Fill().get_BackgroundColor().SetColor(System.Drawing.Color::LightBlue);
+
+            // Apply AutoFilter to header row
+            headerRange.set_AutoFilter(true);
+
             // Write Data
             while select retailGiftCardTable
             {
@@ -42,15 +53,21 @@ internal final class RetailGiftCardExportOnClickedEventHandler
 
                 cell = cells.get_Item(currentRow, 2);
                 cell.set_Value(retailGiftCardTable.CurrencyCode);
+
+                cell = cells.get_Item(currentRow, 3);
+                cell.set_Value(retailGiftCardTable.DIN_CustomerName);
+
+                cell = cells.get_Item(currentRow, 4);
+                cell.set_Value(retailGiftCardTable.DIN_REF_SONUMBER);
             }
+
+            // Adjust column widths based on content
+            cells.get_Item(strFmt("A1:D%1", currentRow)).AutoFitColumns(10.0, 50.0);
 
             package.Save();
 
             // Send file to user
             file::SendFileToUser(memoryStream, "RetailGiftCardExport.xlsx");
         }
-
-
     }
-
 }
