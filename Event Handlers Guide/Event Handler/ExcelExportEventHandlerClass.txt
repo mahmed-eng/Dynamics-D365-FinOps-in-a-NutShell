@@ -1,0 +1,56 @@
+using System.IO;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using OfficeOpenXml.Table;
+using OfficeOpenXml.ExcelPackage;
+using OfficeOpenXml.ExcelRange;
+
+
+internal final class RetailGiftCardExportOnClickedEventHandler
+{
+
+    [FormControlEventHandler(formControlStr(RetailGiftCardTable, FormButtonControl1), FormControlEventType::Clicked)]
+    public static void FormButtonControl1_OnClicked(FormControl sender, FormControlEventArgs e)
+    {
+     
+        RetailGiftCardTable retailGiftCardTable;
+        System.IO.MemoryStream memoryStream = new System.IO.MemoryStream();
+
+        using (var package = new OfficeOpenXml.ExcelPackage(memoryStream))
+        {
+            int currentRow = 1;
+
+            var worksheets = package.get_Workbook().get_Worksheets();
+            var retailGiftCardWorksheet = worksheets.Add("Export");
+            var cells = retailGiftCardWorksheet.get_Cells();
+            OfficeOpenXml.ExcelRange cell;
+
+            // Write Header
+            cell = cells.get_Item(currentRow, 1);
+            cell.set_Value("Entry ID");
+
+            cell = cells.get_Item(currentRow, 2);
+            cell.set_Value("Currency Code");
+
+            // Write Data
+            while select retailGiftCardTable
+            {
+                currentRow++;
+                
+                cell = cells.get_Item(currentRow, 1);
+                cell.set_Value(retailGiftCardTable.EntryId);
+
+                cell = cells.get_Item(currentRow, 2);
+                cell.set_Value(retailGiftCardTable.CurrencyCode);
+            }
+
+            package.Save();
+
+            // Send file to user
+            file::SendFileToUser(memoryStream, "RetailGiftCardExport.xlsx");
+        }
+
+
+    }
+
+}
