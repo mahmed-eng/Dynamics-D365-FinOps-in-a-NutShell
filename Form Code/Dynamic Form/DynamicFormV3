@@ -1,0 +1,321 @@
+class CustGroupDynamicForm
+{
+    // Variables to store user input
+    private str myCustomId;
+    private str myCustomName;
+    private str description;
+
+    // Singleton instance
+    private static CustGroupDynamicForm instance;
+
+    public static void main(Args _args)
+    {
+        // Object declarations
+        DictTable                       dictTable;
+        Form                            form;
+        FormBuildDesign                 design;
+        FormBuildDataSource             ds;
+        FormBuildActionPaneControl      actionPane;
+        FormBuildActionPaneTabControl   actionPaneTab;
+        FormBuildButtonGroupControl     btngrp1;
+        FormBuildButtonGroupControl     btngrp2;
+        FormBuildCommandButtonControl   cmdNew;
+        FormBuildCommandButtonControl   cmdDel;
+        FormBuildCommandButtonControl   cmdSave;
+        FormBuildCommandButtonControl   cmdEdit;
+        FormBuildMenuButtonControl      mbPosting;
+        FormBuildFunctionButtonControl  mibPosting;
+        FormBuildFunctionButtonControl  mibForecast;
+        FormBuildGridControl            grid;
+        FormBuildGroupControl           grpBody;
+        FormBuildGroupControl           grpHeader;
+        FormBuildStringControl          inputMyCustomId;
+        FormBuildStringControl          inputMyCustomName;
+        FormBuildStringControl          inputDescription;
+        Args                            args;
+        FormRun                         formRun;
+        CustGroupDynamicForm            formInstance;
+        #Task
+        #SysSystemDefinedButtons
+
+        // Initialize singleton instance
+        instance = new CustGroupDynamicForm();
+        formInstance = instance;
+
+        // Validate table existence
+        dictTable = new DictTable(tableNum(MyCustomTable));
+        if (!dictTable)
+        {
+            throw error("Table MyCustomTable does not exist.");
+        }
+
+        // Create form and set properties
+        form = new Form();
+        form.name("CustGroupDynamic");
+
+        // Add datasource
+        ds = form.addDataSource(dictTable.name());
+        ds.table(dictTable.id());
+
+        // Set design properties
+        design = form.addDesign('Design');
+        design.caption("Customer groups");
+        design.style(FormStyle::SimpleList);
+        design.titleDatasource(ds.id());
+
+        // Add ActionPane and controls
+        actionPane = design.addControl(FormControlType::ActionPane, 'ActionPane');
+        actionPane.style(ActionPaneStyle::Strip);
+        actionPaneTab = actionPane.addControl(FormControlType::ActionPaneTab, 'ActionPaneTab');
+        btngrp1 = actionPaneTab.addControl(FormControlType::ButtonGroup, 'NewDeleteGroup');
+        btngrp2 = actionPaneTab.addControl(FormControlType::ButtonGroup, 'ButtonGroup');
+
+        // Add CommandButton controls
+        cmdNew = btngrp1.addControl(FormControlType::CommandButton, 'NewButton');
+        cmdNew.primary(NoYes::Yes);
+        cmdNew.text("New");
+        cmdNew.saveRecord(NoYes::Yes);
+        cmdNew.enabled(true);
+        cmdNew.registerOverrideMethod(methodStr(FormCommandButtonControl, clicked), 'clickedNewButton', formInstance);
+
+        cmdEdit = btngrp1.addControl(FormControlType::CommandButton, 'EditButton');
+        cmdEdit.text("Edit");
+        cmdEdit.saveRecord(NoYes::Yes);
+        cmdEdit.enabled(true);
+        cmdEdit.registerOverrideMethod(methodStr(FormCommandButtonControl, clicked), 'clickedEditButton', formInstance);
+
+        cmdDel = btngrp1.addControl(FormControlType::CommandButton, 'DeleteButton');
+        cmdDel.text("Delete");
+        cmdDel.saveRecord(NoYes::Yes);
+        cmdDel.command(#taskDeleteRecord);
+
+        cmdSave = btngrp1.addControl(FormControlType::CommandButton, 'SaveButton');
+        cmdSave.text("Save");
+        cmdSave.saveRecord(NoYes::Yes);
+        cmdSave.registerOverrideMethod(methodStr(FormCommandButtonControl, clicked), 'clickedSaveButton', formInstance);
+
+        // Add MenuButton controls
+        mbPosting = btngrp2.addControl(FormControlType::MenuButton, 'MenuButtonPosting');
+        mbPosting.helpText("Set up related data for the group.");
+        mbPosting.text("Setup");
+
+        mibPosting = mbPosting.addControl(FormControlType::MenuFunctionButton, 'Posting');
+        mibPosting.text('Item posting');
+        mibPosting.saveRecord(NoYes::No);
+        mibPosting.dataSource(ds.id());
+        mibPosting.menuItemName(menuItemDisplayStr(InventPosting));
+
+        mibForecast = btngrp2.addControl(FormControlType::MenuFunctionButton, 'SalesForecast');
+        mibForecast.text('Forecast');
+        mibForecast.saveRecord(NoYes::No);
+        mibForecast.menuItemName(menuItemDisplayStr(ForecastSalesGroup));
+
+        // Add Header Group for input fields
+        grpHeader = design.addControl(FormControlType::Group, 'HeaderGroup');
+        grpHeader.caption("Enter Customer Group Details");
+        grpHeader.columns(3); // Arrange controls horizontally in 3 columns
+
+        // Add input fields to Header Group
+        inputMyCustomId = grpHeader.addControl(FormControlType::String, 'InputMyCustomId');
+        inputMyCustomId.label("Customer Group ID");
+        inputMyCustomId.registerOverrideMethod(methodStr(FormStringControl, textChange), 'inputMyCustomId_textChange', formInstance);
+
+        inputMyCustomName = grpHeader.addControl(FormControlType::String, 'InputMyCustomName');
+        inputMyCustomName.label("Customer Group Name");
+        inputMyCustomName.registerOverrideMethod(methodStr(FormStringControl, textChange), 'inputMyCustomName_textChange', formInstance);
+
+        inputDescription = grpHeader.addControl(FormControlType::String, 'InputDescription');
+        inputDescription.label("Description");
+        inputDescription.registerOverrideMethod(methodStr(FormStringControl, textChange), 'inputDescription_textChange', formInstance);
+
+        // Add Grid controls
+        grpBody = design.addControl(FormControlType::Group, 'Body');
+        grpBody.heightMode(FormHeight::ColumnHeight);
+        grpBody.columnspace(0);
+        grpBody.style(GroupStyle::BorderlessGridContainer);
+
+        grid = grpBody.addControl(FormControlType::Grid, "Grid");
+        grid.dataSource(ds.name());
+        grid.showRowLabels(false);
+        grid.widthMode(FormWidth::ColumnWidth);
+        grid.heightMode(FormHeight::ColumnHeight);
+
+        // Add fields to Grid
+        grid.addDataField(ds.id(), fieldNum(MyCustomTable, MyCustomId));
+        grid.addDataField(ds.id(), fieldNum(MyCustomTable, MyCustomName));
+        grid.addDataField(ds.id(), fieldNum(MyCustomTable, Description));
+
+        // Run the form
+        args = new Args();
+        args.object(form);
+
+        try
+        {
+            formRun = classFactory.formRunClass(args);
+            formRun.init();
+
+            // Prevent automatic record creation
+            FormDataSource fds = formRun.dataSource(1);
+            fds.allowCreate(false);
+            fds.executeQuery();
+
+            FormCommandButtonControl newButton = formRun.control(formRun.controlId(#SystemDefinedNewButton)) as FormCommandButtonControl;
+            if (newButton)
+            {
+                newButton.visible(false);
+            }
+
+            // Disable system-defined buttons
+            FormCommandButtonControl saveButton = formRun.control(formRun.controlId(#SystemDefinedSaveButton)) as FormCommandButtonControl;
+            if (saveButton)
+            {
+                saveButton.visible(false);
+            }
+
+            FormCommandButtonControl deleteButton = formRun.control(formRun.controlId(#SystemDefinedDeleteButton)) as FormCommandButtonControl;
+            if (deleteButton)
+            {
+                deleteButton.visible(false);
+            }
+
+            FormCommandButtonControl viewEditButton = formRun.control(formRun.controlId(#SystemDefinedViewEditButton)) as FormCommandButtonControl;
+            if (viewEditButton)
+            {
+                viewEditButton.visible(false);
+            }
+
+            formRun.run();
+            formRun.wait();
+        }
+        catch
+        {
+            error("An error occurred while creating or running the form.");
+        }
+    }
+
+    // Methods to capture input from header fields
+    public void inputMyCustomId_textChange(FormStringControl _control)
+    {
+        this.myCustomId = _control.text();
+    }
+
+    public void inputMyCustomName_textChange(FormStringControl _control)
+    {
+        this.myCustomName = _control.text();
+    }
+
+    public void inputDescription_textChange(FormStringControl _control)
+    {
+        this.description = _control.text();
+    }
+
+    // Custom method to handle New button click
+    public void clickedNewButton(FormCommandButtonControl _sender)
+    {
+        FormRun fr = _sender.formRun();
+        FormDataSource fds = fr.dataSource(1);
+        fds.allowCreate(true);
+        fds.create();
+        fds.allowCreate(false);
+    }
+
+    // Custom method to handle Edit button click
+    public void clickedEditButton(FormCommandButtonControl _sender)
+    {
+        FormRun fr = _sender.formRun();
+        FormDataSource fds = fr.dataSource(1);
+        MyCustomTable table = fds.cursor();
+
+        if (table.RecId)
+        {
+            // Populate input fields with selected record's data
+            FormStringControl idControl = fr.control(fr.controlId('InputMyCustomId'));
+            FormStringControl nameControl = fr.control(fr.controlId('InputMyCustomName'));
+            FormStringControl descControl = fr.control(fr.controlId('InputDescription'));
+
+            idControl.text(table.MyCustomId);
+            nameControl.text(table.MyCustomName);
+            descControl.text(table.Description);
+
+            // Update stored variables
+            this.myCustomId = table.MyCustomId;
+            this.myCustomName = table.MyCustomName;
+            this.description = table.Description;
+        }
+        else
+        {
+            error("Please select a record to edit.");
+        }
+    }
+
+    // Custom method to handle Save button click
+    public void clickedSaveButton(FormCommandButtonControl _sender)
+    {
+        FormRun fr = _sender.formRun();
+        ttsBegin;
+        try
+        {
+            // Validate that all fields are filled
+            if (!this.myCustomId || !this.myCustomName || !this.description)
+            {
+                error("All fields (Customer Group ID, Customer Group Name, Description) must be filled before saving.");
+                ttsAbort;
+            }
+
+            MyCustomTable table;
+            select forUpdate table where table.MyCustomId == this.myCustomId;
+
+            if (table.RecId)
+            {
+                // Update existing record
+                table.MyCustomName = this.myCustomName;
+                table.Description = this.description;
+                table.update();
+            }
+            else
+            {
+                // Insert new record
+                table.clear();
+                table.MyCustomId = this.myCustomId;
+                table.MyCustomName = this.myCustomName;
+                table.Description = this.description;
+                table.insert();
+            }
+
+            // Clear input fields
+            FormStringControl idControl = fr.control(fr.controlId('InputMyCustomId'));
+            FormStringControl nameControl = fr.control(fr.controlId('InputMyCustomName'));
+            FormStringControl descControl = fr.control(fr.controlId('InputDescription'));
+            
+            idControl.text('');
+            nameControl.text('');
+            descControl.text('');
+
+            // Clear stored variables
+            this.myCustomId = '';
+            this.myCustomName = '';
+            this.description = '';
+
+            // Refresh grid
+            FormDataSource fds = fr.dataSource(1);
+            fds.executeQuery();
+
+            info("Record saved successfully.");
+        }
+        catch
+        {
+            error("Failed to save record.");
+        }
+        ttsCommit;
+    }
+
+    // Singleton pattern to access instance
+    public static CustGroupDynamicForm getInstance()
+    {
+        if (!instance)
+        {
+            instance = new CustGroupDynamicForm();
+        }
+        return instance;
+    }
+}
