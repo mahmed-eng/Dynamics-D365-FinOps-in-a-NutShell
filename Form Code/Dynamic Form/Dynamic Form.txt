@@ -1,0 +1,115 @@
+class CustGroupDynamicForm
+{
+    public static void main(Args _args)
+    {
+        // Object declarations
+        DictTable                       dictTable;
+        Form                            form;
+        FormBuildDesign                 design;
+        FormBuildDataSource             ds;
+        FormBuildActionPaneControl      actionPane;
+        FormBuildActionPaneTabControl   actionPaneTab;
+        FormBuildButtonGroupControl     btngrp1;
+        FormBuildButtonGroupControl     btngrp2;
+        FormBuildCommandButtonControl   cmdNew;
+        FormBuildCommandButtonControl   cmdDel;
+        FormBuildMenuButtonControl      mbPosting;
+        FormBuildFunctionButtonControl  mibPosting;
+        FormBuildFunctionButtonControl  mibForecast;
+        FormBuildGridControl            grid;
+
+        FormBuildGroupControl           grpBody;
+        Args                            args;
+        FormRun                         formRun;
+        #Task
+        dictTable = new DictTable(tableNum(CustGroup));
+        // Use Form class to create a dynamics form and
+        //use its method to set different properties.
+        form = new Form();
+        form.name("CustGroupDynamic");
+        //Add datasource in Form
+        ds = form.addDataSource(dictTable.name());
+        ds.table(dictTable.id());
+        //Set Design prperties
+        design = form.addDesign('Design');
+        design.caption("Customer groups");
+        design.style(FormStyle::SimpleList);
+        design.titleDatasource(ds.id());
+        //Add ActionPan design controls and set their
+        //properties
+        actionPane = design.addControl(
+     FormControlType::ActionPane, 'ActionPane');
+        actionPane.style(ActionPaneStyle::Strip);
+        actionPaneTab = actionPane.addControl(
+     FormControlType::ActionPaneTab, 'ActionPaneTab');
+        btngrp1 = actionPaneTab.addControl(
+     FormControlType::ButtonGroup, 'NewDeleteGroup');
+        btngrp2 = actionPaneTab.addControl(
+     FormControlType::ButtonGroup, 'ButtonGroup');
+        //Add CommandButton design controls and set their
+        //properties
+        cmdNew = btngrp1.addControl(
+     FormControlType::CommandButton, 'NewButton');
+        cmdNew.primary(NoYes::Yes);
+        cmdNew.command(#taskNew);
+        //Add CommandButton design controls and set their
+        //properties
+        cmdDel = btngrp1.addControl(
+     FormControlType::CommandButton, 'DeleteButton');
+        cmdDel.text("Delete");
+        cmdDel.saveRecord(NoYes::Yes);
+        cmdDel.primary(NoYes::Yes);
+        cmdDel.command(#taskDeleteRecord);
+        //Add MenuButton design controls and set their
+        //properties
+        mbPosting = btngrp2.addControl(
+     FormControlType::MenuButton, 'MenuButtonPosting');
+        mbPosting.helpText("Set up related data for the group.");
+        mbPosting.text("Setup");
+        mibPosting = mbPosting.addControl(
+     FormControlType::MenuFunctionButton, 'Posting');
+        mibPosting.text('Item posting');
+        mibPosting.saveRecord(NoYes::No);
+        mibPosting.dataSource(ds.id());
+        mibPosting.menuItemName
+     (menuitemDisplayStr(InventPosting));
+        mibForecast = btngrp2.addControl(
+     FormControlType::MenuFunctionButton, 'SalesForecast');
+        mibForecast.text('Forecast');
+        mibForecast.saveRecord(NoYes::No);
+        mibForecast.menuItemName(
+     menuitemDisplayStr(ForecastSalesGroup));
+        //Add Grid design controls and set their
+        //properties
+        grpBody = design.addControl(FormControlType::Group,
+ 'Body');
+        grpBody.heightMode(FormHeight::ColumnHeight);
+        grpBody.columnspace(0);
+        grpBody.style(GroupStyle::BorderlessGridContainer);
+        grid = grpBody.addControl(FormControlType::Grid, "Grid");
+        grid.dataSource(ds.name());
+        grid.showRowLabels(false);
+        grid.widthMode(FormWidth::ColumnWidth);
+        grid.heightMode(FormHeight::ColumnHeight);
+        //Add fields in Grid and set their        //properties
+        grid.addDataField
+     (ds.id(), fieldNum(CustGroup,CustGroup));
+
+        grid.addDataField(
+     ds.id(), fieldNum(CustGroup,Name));
+        grid.addDataField(
+     ds.id(), fieldNum(CustGroup,PaymTermId));
+        grid.addDataField(
+     ds.id(), fieldnum(CustGroup,ClearingPeriod));
+        grid.addDataField(
+     ds.id(), fieldNum(CustGroup,BankCustPaymIdTable));
+        grid.addDataField(
+     ds.id(), fieldNum(CustGroup,TaxGroupId));
+        args = new Args();
+        args.object(form);
+        formRun = classFactory.formRunClass(args);
+        formRun.init();
+        formRun.run();
+        formRun.detach();
+    }
+}
