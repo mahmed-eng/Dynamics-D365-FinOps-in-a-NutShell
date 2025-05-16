@@ -1,0 +1,362 @@
+=================================================================================
+Contract Class:
+[DataContractAttribute]
+public class DIN_DFandClaimContractClass
+{
+    str DIN_RepairDFNumber;
+
+    [DataMemberAttribute('DIN_RepairDFNumber'),
+     SysOperationLabelAttribute(literalStr("Repair DF Number"))]
+    public str DIN_RepairDFNumber(str _repairDFNumber = DIN_RepairDFNumber)
+    {
+        DIN_RepairDFNumber = _repairDFNumber;
+        return DIN_RepairDFNumber;
+    }
+
+}
+
+
+
+
+=================================================================================
+Controller Class:
+public class DIN_DFandClaimControllerClass extends SrsReportRunController
+{
+    public static DIN_DFandClaimContractClass construct()
+    {
+        return new DIN_DFandClaimContractClass();
+    }
+
+    public static void main(Args _args)
+    {
+        DIN_DFandClaimControllerClass dinDFandClaimControllerClass = new DIN_DFandClaimControllerClass();
+        
+        dinDFandClaimControllerClass.parmReportName(ssrsReportStr(DIN_DFandClaimReport, PrecisionDesign1));
+        dinDFandClaimControllerClass.parmArgs(_args);
+        dinDFandClaimControllerClass.parmShowDialog(false);
+        dinDFandClaimControllerClass.startOperation();
+    }
+
+    protected void prePromptModifyContract()
+    {
+        DIN_DefectedAndRepairCustomerClaimTableV1 dinDefectedAndRepairCustomerClaimTableV1;
+        FormDataSource fds;
+    
+        DIN_DFandClaimContractClass contract = this.parmReportContract().parmRdpContract() as DIN_DFandClaimContractClass;
+    
+        fds = FormDataUtil::getFormDataSource(this.parmArgs().record());
+    
+        if (this.parmArgs() && this.parmArgs().dataset() == tableNum(DIN_DefectedAndRepairCustomerClaimTableV1))
+        {
+            dinDefectedAndRepairCustomerClaimTableV1 = fds.cursor();
+            if (dinDefectedAndRepairCustomerClaimTableV1)
+            {
+                contract.DIN_RepairDFNumber(dinDefectedAndRepairCustomerClaimTableV1.DIN_RepairDFNumber);
+            }
+        }
+    
+        this.parmShowDialog(false);
+    }
+
+}
+
+
+
+
+
+
+=================================================================================
+DP Class:
+[SRSReportParameterAttribute(classStr(DIN_DFandClaimContractClass))]
+public class DIN_DFandClaimDPClass extends SRSReportDataProviderBase
+{
+    str repairDFNumber;
+    DIN_DFandClaimContractClass dinDFandClaimContractClass;
+    DIN_DFandClaimTempTable dinDFandClaimTempTable;
+    DIN_DefectedAndRepairCustomerClaimTableV1 dinDefectedAndRepairCustomerClaimTableV1;
+    List repairDFNumberList;
+
+    [SRSReportDataSetAttribute(tableStr(DIN_DFandClaimTempTable))]
+    public DIN_DFandClaimTempTable getDIN_DFandClaimTempTable()
+    {
+        select * from dinDFandClaimTempTable;
+        return dinDFandClaimTempTable;
+    }
+
+    public void processReport()
+    {
+        dinDFandClaimContractClass = this.parmDataContract();
+        repairDFNumber = dinDFandClaimContractClass.DIN_RepairDFNumber();
+
+        // ttsBegin;
+        select * from dinDefectedAndRepairCustomerClaimTableV1
+        where dinDefectedAndRepairCustomerClaimTableV1.DIN_RepairDFNumber == repairDFNumber;
+    
+        if (dinDefectedAndRepairCustomerClaimTableV1)
+        {
+            dinDFandClaimTempTable.clear();
+            dinDFandClaimTempTable.DIN_RepairDFNumber = dinDefectedAndRepairCustomerClaimTableV1.DIN_RepairDFNumber;
+            dinDFandClaimTempTable.DIN_StoreId = dinDefectedAndRepairCustomerClaimTableV1.DIN_StoreId;
+            dinDFandClaimTempTable.DIN_StoreName = dinDefectedAndRepairCustomerClaimTableV1.DIN_StoreName;
+            dinDFandClaimTempTable.DIN_ItemId = dinDefectedAndRepairCustomerClaimTableV1.DIN_ItemId;
+            dinDFandClaimTempTable.DIN_ItemName = dinDefectedAndRepairCustomerClaimTableV1.DIN_ItemName;
+            dinDFandClaimTempTable.DIN_Color = dinDefectedAndRepairCustomerClaimTableV1.DIN_Color;
+            dinDFandClaimTempTable.DIN_Size = dinDefectedAndRepairCustomerClaimTableV1.DIN_Size;
+            dinDFandClaimTempTable.DIN_Qty = dinDefectedAndRepairCustomerClaimTableV1.DIN_Qty;
+            dinDFandClaimTempTable.DIN_Price = dinDefectedAndRepairCustomerClaimTableV1.DIN_Price;
+            dinDFandClaimTempTable.DIN_ClaimValue = dinDefectedAndRepairCustomerClaimTableV1.DIN_ClaimValue;
+            dinDFandClaimTempTable.DIN_ClaimType = dinDefectedAndRepairCustomerClaimTableV1.DIN_ClaimType;
+            dinDFandClaimTempTable.DIN_Defect = dinDefectedAndRepairCustomerClaimTableV1.DIN_Defect;
+            dinDFandClaimTempTable.DIN_ApprovalDate = dinDefectedAndRepairCustomerClaimTableV1.DIN_ApprovalDate;
+            dinDFandClaimTempTable.DIN_ApprovedBy = dinDefectedAndRepairCustomerClaimTableV1.DIN_ApprovedBy;
+            dinDFandClaimTempTable.DIN_StoreRemarks = dinDefectedAndRepairCustomerClaimTableV1.DIN_StoreRemarks;
+            dinDFandClaimTempTable.DIN_HeadOfficeRemarks = dinDefectedAndRepairCustomerClaimTableV1.DIN_HeadOfficeRemarks;
+            dinDFandClaimTempTable.DIN_Hieracy2 = dinDefectedAndRepairCustomerClaimTableV1.DIN_Hieracy2;
+            dinDFandClaimTempTable.DIN_Barcode = dinDefectedAndRepairCustomerClaimTableV1.DIN_Barcode;
+            dinDFandClaimTempTable.DIN_CustomerName = dinDefectedAndRepairCustomerClaimTableV1.DIN_CustomerName;
+            dinDFandClaimTempTable.DIN_CustomerNumber = dinDefectedAndRepairCustomerClaimTableV1.DIN_CustomerNumber;
+            dinDFandClaimTempTable.DIN_InvoiceNumber = dinDefectedAndRepairCustomerClaimTableV1.DIN_InvoiceNumber;
+            dinDFandClaimTempTable.DIN_InvoiceDate = dinDefectedAndRepairCustomerClaimTableV1.DIN_InvoiceDate;
+            dinDFandClaimTempTable.DIN_ReceivedDate = dinDefectedAndRepairCustomerClaimTableV1.DIN_ReceivedDate;
+            dinDFandClaimTempTable.DIN_ClaimDate = dinDefectedAndRepairCustomerClaimTableV1.DIN_ClaimDate;
+            dinDFandClaimTempTable.DIN_ClaimStatusV1 = dinDefectedAndRepairCustomerClaimTableV1.DIN_ClaimStatusV1;
+            dinDFandClaimTempTable.DIN_DeliveredToCustomer = dinDefectedAndRepairCustomerClaimTableV1.DIN_DeliveredToCustomer;
+            dinDFandClaimTempTable.DIN_DeliveredToCustomerDate = dinDefectedAndRepairCustomerClaimTableV1.DIN_DeliveredToCustomerDate;
+
+            dinDFandClaimTempTable.insert();
+        }
+        // ttsCommit;
+
+        info("Record has been successfully processed and transferred.");
+    }
+
+}
+
+
+
+
+
+=================================================================================
+Form Code:
+[Form]
+public class DIN_DefectedAndRepairCustomerClaimFormV1 extends FormRun
+{
+    DIN_RepairDFNumberEDT lastGeneratedNumber;
+    boolean isNewRecordCreated;
+
+    public void run()
+    {
+        super();
+        DIN_DefectedAndRepairCustomerClaimTableV1.clear();
+        DIN_DefectedAndRepairCustomerClaimTableV1_ds.research(true);
+        DIN_DefectedAndRepairCustomerClaimTableV1_ds.create(true);
+    }
+
+    public void init()
+    {
+        super();
+    }
+
+    [DataSource]
+    class DIN_DefectedAndRepairCustomerClaimTableV1
+    {
+        public void initValue()
+        {
+            super();
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ClaimDate = systemDateGet();
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ClaimStatusV1 = "Open";
+        }
+
+        public void write()
+        {
+            super();
+            // Call the output menu item before clearing fields By 4hm3d H45hm1
+            this.callOutputMenuItem();
+            // Clear fields after the menu item is executed
+            this.clearFields();
+        }
+
+        // Method to call the output menu item By 4hm3d H45hm1
+        private void callOutputMenuItem()
+        {
+            Args args = new Args();
+            MenuFunction menuFunction;
+
+            try
+            {
+                args.menuItemName("DIN_DFandClaimOutputMenuItem");
+                args.menuItemType(MenuItemType::Output);
+                args.record(DIN_DefectedAndRepairCustomerClaimTableV1);
+
+                menuFunction = new MenuFunction(
+                    menuitemOutputStr(DIN_DFandClaimOutputMenutItem),
+                    MenuItemType::Output
+                );
+                menuFunction.run(args);
+            }
+            catch
+            {
+                error("Failed to execute the output menu item.");
+            }
+        }
+
+        public void clearFields()
+        {
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_RepairDFNumber = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_StoreId = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_StoreName = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ItemId = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ItemName = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Size = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Color = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Price = 0;
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Qty = 0;
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ClaimValue = 0;
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ClaimType = 0;
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Defect = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ClaimStatusV1 = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ApprovalDate = dateNull();
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ApprovedBy = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_StoreRemarks = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_HeadOfficeRemarks = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Hieracy2 = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Barcode = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_CustomerName = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_CustomerNumber = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_InvoiceNumber = "";
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_InvoiceDate = dateNull();
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ReceivedDate = dateNull();
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ClaimDate = dateNull();
+            DIN_DefectedAndRepairCustomerClaimTableV1.clear();
+            DIN_DefectedAndRepairCustomerClaimTableV1.reread();
+        }
+
+        public void create(boolean _append = false)
+        {
+            DIN_DefectedAndRepairCustomerClaimTableV1_ds.research();
+            DIN_RepairDFNumberEDT  dinRepairDFNumberEDT;
+            NumberSequenceReference numberSequenceReference;
+            super(_append);
+            numberSequenceReference = NumberSeqReference::findReference(extendedTypeNum(DIN_RepairDFNumberEDT));
+            if (numberSequenceReference)
+            {
+                dinRepairDFNumberEDT = NumberSeq::newGetNum(numberSequenceReference).num();
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_RepairDFNumber = dinRepairDFNumberEDT;
+            }
+        }
+
+    }
+
+    [Control("String")]
+    class DIN_DefectedAndRepairCustomerClaimTableV1_DIN_Barcode
+    {
+        public void lookup()
+        {
+            Query query = new Query();
+            QueryBuildDataSource qbds;
+            SysTableLookup sysTableLookup;
+
+            sysTableLookup = SysTableLookup::newParameters(tableNum(DIN_BarCodeView), this);
+
+            sysTableLookup.addLookupField(fieldNum(DIN_BarCodeView, ItemBarCode));
+            sysTableLookup.addLookupField(fieldNum(DIN_BarCodeView, ItemId));
+            sysTableLookup.addLookupField(fieldNum(DIN_BarCodeView, InventColorId));
+            sysTableLookup.addLookupField(fieldNum(DIN_BarCodeView, InventSizeId));
+            qbds = query.addDataSource(tableNum(DIN_BarCodeView));
+
+            qbds.addRange(fieldNum(DIN_BarCodeView, DataAreaId)).value(queryValue('din'));
+            qbds.addRange(fieldNum(DIN_BarCodeView, ItemBarCode)).value(SysQuery::valueNotEmptyString());
+
+            sysTableLookup.parmQuery(query);
+            sysTableLookup.performFormLookup();
+        }
+
+        public boolean modified()
+        {
+            boolean ret;
+            MTQDimProduct mtqDimProduct;
+
+            ret = super();
+            
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ItemId = '';
+            
+            select firstOnly mtqDimProduct where mtqDimProduct.ItemBarCode == DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Barcode;
+            
+            if (mtqDimProduct)
+            {
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ItemId = mtqDimProduct.Itemid;
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ItemName = mtqDimProduct.ProductName;
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Size = mtqDimProduct.InventSize;
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Color = mtqDimProduct.InventColor;
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Price = mtqDimProduct.ProductPrice;
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Hieracy2 = mtqDimProduct.Hiar_Level2;
+            }
+
+            return ret;
+        }
+
+    }
+
+    [Control("String")]
+    class DIN_DefectedAndRepairCustomerClaimTableV1_DIN_InvoiceNumber
+    {
+        public void lookup()
+        {
+            Query                   query = new Query();
+            QueryBuildDataSource    qbds;
+            QueryBuildRange         qbr;
+            SysTableLookup          sysTableLookup;
+           
+            sysTableLookup = SysTableLookup::newParameters(tableNum(RETAILTRANSACTIONSALESTRANS), this);
+            sysTableLookup.addLookupField(fieldNum(RETAILTRANSACTIONSALESTRANS, RECEIPTID));
+            sysTableLookup.addLookupField(fieldNum(RETAILTRANSACTIONSALESTRANS, Store));
+           
+            qbds = query.addDataSource(tableNum(RETAILTRANSACTIONSALESTRANS));
+            qbr = qbds.addRange(fieldNum(RETAILTRANSACTIONSALESTRANS, ITEMID));
+            qbr.value(queryValue(DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ItemId));
+          
+            sysTableLookup.parmQuery(query);
+            sysTableLookup.performFormLookup();
+        }
+
+        public boolean modified()
+        {
+            boolean ret;
+            RETAILTRANSACTIONSALESTRANS retailTrans;
+
+            ret = super();
+
+            if (DIN_DefectedAndRepairCustomerClaimTableV1.DIN_InvoiceNumber)
+            {
+                select firstonly TransDate from retailTrans
+                where retailTrans.ReceiptId == DIN_DefectedAndRepairCustomerClaimTableV1.DIN_InvoiceNumber;
+
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_InvoiceDate = retailTrans.TransDate;
+            }
+            else
+            {
+                DIN_DefectedAndRepairCustomerClaimTableV1.DIN_InvoiceDate = dateNull();
+            }
+
+            return ret;
+        }
+
+    }
+
+    [Control("Integer")]
+    class DIN_DefectedAndRepairCustomerClaimTableV1_DIN_Qty
+    {
+        public boolean modified()
+        {
+            boolean ret;
+
+            ret = super();
+
+            DIN_DefectedAndRepairCustomerClaimTableV1.DIN_ClaimValue = DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Price * DIN_DefectedAndRepairCustomerClaimTableV1.DIN_Qty;
+
+            return ret;
+        }
+
+    }
+
+}
