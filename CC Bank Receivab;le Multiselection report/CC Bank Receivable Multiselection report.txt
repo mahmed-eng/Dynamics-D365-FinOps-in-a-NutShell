@@ -1,0 +1,192 @@
+CC Receivables Multi Selection:
+//Contact Class
+=======================================================================================================
+[DataContractAttribute,SysOperationContractProcessingAttribute(classStr(DIN_CCBankReceivableUIBuilder))]
+class DIN_CCBankReceivableContractClass
+{
+    Transdate fromDate;
+    TransDate todate;
+    List<str> accid;
+    
+    [
+    DataMemberAttribute('FromDate'),
+    SysOperationLabelAttribute("From Date")
+    ]
+    public FromDate ParmFromDate(FromDate _FromDate = FromDate)
+    {
+        FromDate = _FromDate;
+        return FromDate;
+    }
+
+    [DataMemberAttribute('ToDate'),
+    SysOperationLabelAttribute("To Date")]
+    public ToDate ParmToDate(ToDate _ToDate = ToDate)
+    {
+        ToDate = _ToDate;
+        return ToDate;
+    }
+
+    [DataMemberAttribute("Bank"),
+    SysOperationLabelAttribute(literalStr("Bank")),
+    AifCollectionTypeAttribute(identifierStr(accid), Types::String)]
+    public List<str> ParmaccountId(List<str> _accid = accid)
+    {
+        accid = _accid;
+        return accid;
+    }
+
+}
+
+
+
+=======================================================================================================
+[SRSReportParameterAttribute(classstr(DIN_CCBankReceivableContractClass))]
+class DIN_CCBankReceivableDPClass extends SrsReportDataProviderPreProcessTempDB
+{
+    DIN_BankReceivableTmpTable              tmpBankReceivable;
+    DIN_BankSettlementTable                 bankSettlementTable;
+    DIN_BanksDetailsTable                   banksDetailsTable;
+    List                                    accid = new List(Types::String);
+    ListEnumerator                          bankaccid;
+    BankAccountIDCopy                           bankaccountids;
+    
+
+    //DailyCashBank Header Table
+    [SRSReportDataSetAttribute(tablestr(DIN_BankReceivableTmpTable))]
+    public DIN_BankReceivableTmpTable getDIN_BankReceivableTmpTable()
+    {
+        select tmpBankReceivable;
+        return tmpBankReceivable;
+    }
+
+    public void processReport()
+    {
+        DIN_CCBankReceivableContractClass        contract;
+        TransDate                               fromDate, toDate;
+      
+        contract = this.parmDataContract() as DIN_CCBankReceivableContractClass;
+        
+        //Parameters
+        fromDate        = contract.parmFromDate();
+        toDate          = contract.parmToDate();
+        accid       = contract.ParmaccountId();//contract.ParmaccountId();
+
+        
+        if (accid != null)
+        {
+            bankaccid = accid.getEnumerator();
+            while (bankaccid.moveNext())
+            {
+                bankaccountids = bankaccid.current();
+
+
+                while select * from bankSettlementTable
+                    order by bankSettlementTable.DIN_SettlementDate
+                    where bankSettlementTable.DIN_BankName == bankaccountids
+                    && bankSettlementTable.DIN_SettlementDate >= fromDate
+                     && bankSettlementTable.DIN_SettlementDate <= toDate
+            
+                {
+        
+                    tmpBankReceivable.clear();
+                    tmpBankReceivable.DIN_ShopName                = bankSettlementTable.DIN_ShopName;
+                    tmpBankReceivable.DIN_SettlementDate          = bankSettlementTable.DIN_SettlementDate;
+                    tmpBankReceivable.DIN_BankName                = bankSettlementTable.DIN_BankName;
+                    tmpBankReceivable.DIN_SettlementAmount        = bankSettlementTable.DIN_SettlementAmount;
+                    tmpBankReceivable.DIN_SettlementTime          = bankSettlementTable.DIN_SettlementTime;
+                    tmpBankReceivable.DIN_ConvertedSettlementTime = bankSettlementTable.DIN_ConvertedSettlementTime;
+
+                    select * from banksDetailsTable where banksDetailsTable.DIN_BankName == tmpBankReceivable.DIN_BankName;
+                    {
+                        tmpBankReceivable.DIN_AccountNumber           = banksDetailsTable.DIN_AccountNumber;
+                        tmpBankReceivable.DIN_Commission              = banksDetailsTable.DIN_Commission;
+                    }
+                    tmpBankReceivable.insert();
+                }
+            }
+        }
+    }
+
+}
+
+
+=======================================================================================================
+class DIN_CCBankReceivableUIBuilder extends SrsReportDataContractUIBuilder 
+{
+    DialogField                             DialogFromDate;
+    DialogField                             DialogToDate;
+    DialogField                             BankAccountIDCopy;
+    DIN_CCBankReceivableContractClass        _contract;
+    List selectAccountId        =           new List(Types::String);
+    
+    public void build()
+    {
+        _contract = this.datacontractobject() as DIN_CCBankReceivableContractClass;
+
+        dialogFromdate = this.addDialogField(methodStr(DIN_CCBankReceivableContractClass, parmFromDate), _contract);
+        dialogTodate   = this.addDialogField(methodStr(DIN_CCBankReceivableContractClass, parmToDate), _contract);
+        BankAccountIDCopy  = this.addDialogField(methodStr(DIN_CCBankReceivableContractClass, ParmaccountId), _contract);
+       
+    }
+
+    public void lookupAccountId(FormStringControl    _control)
+    {
+        Query                   query = new Query();
+        QueryBuildDataSource    qbds_Account;
+
+        SysTableLookup          sysTablelookup;
+        qbds_Account = query.addDataSource(tableNum(DIN_BanksDetailsTable));
+        qbds_Account.fields().addField(fieldNum(DIN_BanksDetailsTable, DIN_BankName));
+
+        sysTablelookup = SysTableLookup::newParameters(tableNum(DIN_BanksDetailsTable),_control);
+        sysTablelookup.addLookupfield(fieldnum(DIN_BanksDetailsTable,DIN_BankName));
+
+        sysTablelookup.parmQuery(query);
+        sysTablelookup.performFormLookup();
+       
+    }
+
+    public void postBuild()
+    {
+        // Bank Account ID
+        //BankAccountIDCopy.value('All');
+        BankAccountIDCopy = this.bindInfo().getDialogField(_contract, methodStr(DIN_CCBankReceivableContractClass, ParmaccountId));
+        BankAccountIDCopy.registerOverrideMethod(methodStr(FormStringControl, lookup), methodStr(DIN_CCBankReceivableUIBuilder, accountIdLookup), this);
+        BankAccountIDCopy.registerOverrideMethod(methodStr(FormStringControl, leave), methodStr(DIN_CCBankReceivableUIBuilder, accountIdLeave), this);
+        if (BankAccountIDCopy)
+        {
+            BankAccountIDCopy.lookupButton(2);
+        }
+    }
+
+    private void accountIdLookup(FormStringControl _control)
+    {
+        Query query = new query();
+        QueryBuildDataSource qbds;
+        QueryBuildRange queryBuildRange;
+
+        qbds = query.addDataSource(tableNum(DIN_BanksDetailsTable));
+        qbds.addSelectionField(fieldNum(DIN_BanksDetailsTable, DIN_BankName));
+
+        SysLookupMultiSelectGrid::lookup(query, _control, _control, _control, conNull());
+    }
+
+    public boolean accountIdLeave(FormStringControl _control)
+    {
+        if (_control.valueStr() != '')
+        {
+            selectAccountId = strSplit(_control.valueStr(), ';');
+        }
+        return true;
+    }
+
+    public void postRun()
+    {
+           
+        DialogFromDate = this.bindInfo().getDialogField(_contract, methodStr(DIN_CCBankReceivableContractClass, ParmFromDate));
+        DialogToDate = this.bindInfo().getDialogField(_contract, methodStr(DIN_CCBankReceivableContractClass, ParmToDate));
+       
+
+    }
+
+}
