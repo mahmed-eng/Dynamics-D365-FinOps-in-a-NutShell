@@ -1,0 +1,255 @@
+Bank Reconcilation Statement:
+_______________________________________________________________________________________________________
+=======================================================================================================
+//DP Class:
+[SRSReportParameterAttribute(classstr(DIN_CCBankReconcilationStatementContractClass))]
+class DIN_CCBankReconcilationStatementDPClass extends SrsReportDataProviderPreProcessTempDB
+{
+    DIN_BankReconcillationStatementTmpTable              tmpBankReceivable;
+    DIN_BankSettlementTable                 bankSettlementTable,bankSettlementTableOpeningBalance;
+    DIN_BanksDetailsTable                   banksDetailsTable;
+    str                                    accid;
+    BankAccountIDCopy                           bankaccountids;
+   
+    real ReceivedAmountSum;
+    real balanceSum;
+    MainAccount                      mainAccount,mainAccount1;
+    DimensionAttributeValueCombination davc,davc1;
+    BankAccountTable                bankAccountTable,bankAccountTable1;
+    BankAccountTrans                bankAccountTrans,bankAccountTrans1;
+        
+    [SRSReportDataSetAttribute(tablestr(DIN_BankReconcillationStatementTmpTable))]
+    public DIN_BankReconcillationStatementTmpTable getDIN_BankReconcillationStatementTmpTable()
+    {
+        select tmpBankReceivable;
+        return tmpBankReceivable;
+    }
+
+    public void processReport()
+    {
+        DIN_CCBankReconcilationStatementContractClass        contract;
+        TransDate                               fromDate, toDate;
+      
+        contract = this.parmDataContract() as DIN_CCBankReconcilationStatementContractClass;
+               
+        fromDate        = contract.parmFromDate();
+        toDate          = contract.parmToDate();
+        accid       = contract.ParmaccountId();
+        
+        if (accid != null)
+        {
+            bankaccountids = accid;
+
+            while select * from bankSettlementTable
+                order by bankSettlementTable.DIN_SettlementDate
+                where bankSettlementTable.DIN_BankName == bankaccountids
+                && bankSettlementTable.DIN_SettlementDate >= fromDate
+                && bankSettlementTable.DIN_SettlementDate <= toDate
+            {
+                tmpBankReceivable.clear();
+                tmpBankReceivable.DIN_ShopName                = bankSettlementTable.DIN_ShopName;
+                tmpBankReceivable.DIN_SettlementDate          = bankSettlementTable.DIN_SettlementDate;
+                tmpBankReceivable.DIN_BankName                = bankSettlementTable.DIN_BankName;
+                tmpBankReceivable.DIN_SettlementAmount        = bankSettlementTable.DIN_SettlementAmount;
+                tmpBankReceivable.DIN_SettlementTime          = bankSettlementTable.DIN_SettlementTime;
+                tmpBankReceivable.DIN_ConvertedSettlementTime = bankSettlementTable.DIN_ConvertedSettlementTime;
+
+                select * from banksDetailsTable where banksDetailsTable.DIN_BankName == tmpBankReceivable.DIN_BankName;
+                {
+                    tmpBankReceivable.DIN_AccountNumber           = banksDetailsTable.DIN_AccountNumber;
+                    tmpBankReceivable.DIN_Commission              = banksDetailsTable.DIN_Commission;
+                    tmpBankReceivable.DIN_CommissionAmount        = (tmpBankReceivable.DIN_Commission * tmpBankReceivable.DIN_SettlementAmount) / 100;//=Sum((Fields!DIN_Commission.Value * Fields!DIN_SettlementAmount.Value) / 100)
+                    tmpBankReceivable.DIN_ReceivableAmount        = (tmpBankReceivable.DIN_SettlementAmount - tmpBankReceivable.DIN_CommissionAmount); // =Sum(Fields!DIN_SettlementAmount.Value - ((Fields!DIN_Commission.Value * Fields!DIN_SettlementAmount.Value) / 100))
+
+                }
+                balanceSum = 0;
+                select * from bankSettlementTableOpeningBalance
+                    order by bankSettlementTableOpeningBalance.DIN_SettlementDate
+                    where bankSettlementTableOpeningBalance.DIN_BankName == bankaccountids
+                    && bankSettlementTableOpeningBalance.DIN_SettlementDate < fromDate;
+                {
+                    tmpBankReceivable.DIN_Balance = bankSettlementTableOpeningBalance.DIN_SettlementAmount; //=(Fields!DIN_Balance.Value - ((Fields!DIN_Commission.Value * Fields!DIN_Balance.Value) / 100)) - Fields!DIN_ReceivedAmountOpening.Value
+                   
+                    
+                }
+
+                select sum(AmountMST) from bankAccountTrans
+                    exists join bankAccountTable
+                    where bankAccountTrans.AccountID == bankAccountTable.AccountID
+                    exists join davc
+                    where bankAccountTable.LedgerDimension == davc.RecId
+                    exists join mainAccount
+                    where davc.MainAccount == mainAccount.RecId
+                    && mainAccount.MainAccountId == banksDetailsTable.DIN_GLAccount
+                    && bankAccountTrans.TransDate < fromDate
+                    && bankAccountTrans.Voucher like "*CCP*";
+                {
+                    tmpBankReceivable.DIN_ReceivedAmountOpening = bankAccountTrans.AmountMST;
+                }
+
+                select sum(AmountMST) from bankAccountTrans1
+                    exists join bankAccountTable1
+                    where bankAccountTrans1.AccountID == bankAccountTable1.AccountID
+                    exists join davc1
+                    where bankAccountTable1.LedgerDimension == davc1.RecId
+                    exists join mainAccount1
+                    where davc1.MainAccount == mainAccount1.RecId
+                    && mainAccount1.MainAccountId == banksDetailsTable.DIN_GLAccount
+                    && bankAccountTrans1.TransDate == tmpBankReceivable.DIN_SettlementDate
+
+                    && bankAccountTrans1.Voucher like "*CCP*";
+                {
+                    tmpBankReceivable.DIN_ReceivedAmount = bankAccountTrans1.AmountMST;
+                }
+
+
+              
+
+                tmpBankReceivable.DIN_TotalOpeningBalance =  (tmpBankReceivable.DIN_Balance - ((tmpBankReceivable.DIN_Commission * tmpBankReceivable.DIN_Balance) / 100))- tmpBankReceivable.DIN_ReceivedAmountOpening;
+
+               
+
+
+               
+              
+                tmpBankReceivable.insert();
+            }
+        }
+    }
+
+}
+
+
+=======================================================================================================
+//Contract Class:
+[DataContractAttribute,SysOperationContractProcessingAttribute(classStr(DIN_CCBankReconcilationStatementUIBuilderClass))]
+class DIN_CCBankReconcilationStatementContractClass
+{
+    Transdate fromDate;
+    TransDate todate;
+    str accid;
+    
+    [
+    DataMemberAttribute('FromDate'),
+    SysOperationLabelAttribute("From Date")
+    ]
+    public FromDate ParmFromDate(FromDate _FromDate = FromDate)
+    {
+        FromDate = _FromDate;
+        return FromDate;
+    }
+
+    [DataMemberAttribute('ToDate'),
+    SysOperationLabelAttribute("To Date")]
+    public ToDate ParmToDate(ToDate _ToDate = ToDate)
+    {
+        ToDate = _ToDate;
+        return ToDate;
+    }
+
+    [DataMemberAttribute("Bank"),
+    SysOperationLabelAttribute(literalStr("Bank"))]    
+    public str ParmaccountId(str _accid = accid)
+    {
+        accid = _accid;
+        return accid;
+    }
+
+}
+
+
+=======================================================================================================
+//UI BUilder Class:
+class DIN_CCBankReconcilationStatementUIBuilderClass extends SrsReportDataContractUIBuilder
+{
+    DialogField                             DialogFromDate;
+    DialogField                             DialogToDate;
+    DialogField                             BankAccountIDCopy;
+    DIN_CCBankReconcilationStatementContractClass        _contract;
+    str selectAccountId       ;
+    
+    public void build()
+    {
+        _contract = this.datacontractobject() as DIN_CCBankReconcilationStatementContractClass;
+
+        dialogFromdate = this.addDialogField(methodStr(DIN_CCBankReconcilationStatementContractClass, parmFromDate), _contract);
+        dialogTodate   = this.addDialogField(methodStr(DIN_CCBankReconcilationStatementContractClass, parmToDate), _contract);
+        BankAccountIDCopy  = this.addDialogField(methodStr(DIN_CCBankReconcilationStatementContractClass, ParmaccountId), _contract);
+       
+    }
+
+    public void lookupAccountId(FormStringControl    _control)
+    {
+        Query                   query = new Query();
+        QueryBuildDataSource    qbds_Account;
+
+        SysTableLookup          sysTablelookup;
+        qbds_Account = query.addDataSource(tableNum(DIN_BanksDetailsTable));
+        qbds_Account.fields().addField(fieldNum(DIN_BanksDetailsTable, DIN_BankName));
+
+        sysTablelookup = SysTableLookup::newParameters(tableNum(DIN_BanksDetailsTable),_control);
+        sysTablelookup.addLookupfield(fieldnum(DIN_BanksDetailsTable,DIN_BankName));
+
+        sysTablelookup.parmQuery(query);
+        sysTablelookup.performFormLookup();
+       
+    }
+
+    //private void accountIdLookup(FormStringControl _control)
+    //{
+    //    Query query = new query();
+    //    QueryBuildDataSource qbds;
+    //    QueryBuildRange queryBuildRange;
+
+    //    qbds = query.addDataSource(tableNum(DIN_BanksDetailsTable));
+    //    qbds.addSelectionField(fieldNum(DIN_BanksDetailsTable, DIN_BankName));
+
+    //    SysLookupMultiSelectGrid::lookup(query, _control, _control, _control, conNull());
+    //}
+
+    public void accountIdLookup(FormStringControl _control)
+    {
+        Query query = new Query();
+        QueryBuildDataSource qbds;
+        SysTableLookup sysTablelookup;
+       
+        qbds = query.addDataSource(tableNum(DIN_BanksDetailsTable));
+    
+        //qbds.addRange(fieldNum(DIN_BanksDetailsTable, DIN_BankName)).value(queryValue(1));
+        
+        sysTablelookup = SysTableLookup::newParameters(tableNum(DIN_BanksDetailsTable), _control);
+        sysTablelookup.addLookupField(fieldNum(DIN_BanksDetailsTable, DIN_BankName));
+        
+        sysTablelookup.parmQuery(query);
+       
+        sysTablelookup.performFormLookup();
+    }
+
+    public void postBuild()
+    {
+       
+        BankAccountIDCopy = this.bindInfo().getDialogField(_contract, methodStr(DIN_CCBankReconcilationStatementContractClass, ParmaccountId));
+        BankAccountIDCopy.registerOverrideMethod(methodStr(FormStringControl, lookup), methodStr(DIN_CCBankReconcilationStatementUIBuilderClass, accountIdLookup), this);       
+        if (BankAccountIDCopy)
+        {
+            BankAccountIDCopy.lookupButton(2);
+        }
+    }
+
+    public void postRun()
+    {
+           
+        DialogFromDate = this.bindInfo().getDialogField(_contract, methodStr(DIN_CCBankReconcilationStatementContractClass, ParmFromDate));
+        DialogToDate = this.bindInfo().getDialogField(_contract, methodStr(DIN_CCBankReconcilationStatementContractClass, ParmToDate));
+       
+
+    }
+
+}
+
+
+
+
+______________________________________________________________________________________________________
+=======================================================================================================
+
