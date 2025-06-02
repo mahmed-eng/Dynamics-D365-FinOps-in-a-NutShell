@@ -1,0 +1,35 @@
+internal final class DIN_TransferMFGVendorOnEnterEventHandler
+{
+    [FormControlEventHandler(formControlStr(DIN_TransferMFGVendorForm, SearchVoucherNumber), FormControlEventType::Enter)]
+    public static void SearchVoucherNumber_OnEnter(FormControl sender, FormControlEventArgs e)
+    {
+        // Cast the sender to FormStringControl to access the text value
+        FormStringControl control = sender as FormStringControl;
+        str voucherNumber = control.text();
+
+        // Only proceed if voucherNumber is not empty
+        if (!voucherNumber)
+        {
+            return;
+        }
+
+        LedgerJournalTrans ledgerJournalTrans;
+        
+        // Check if voucher number exists in LedgerJournalTrans
+        select firstonly RecId from ledgerJournalTrans
+            where ledgerJournalTrans.Voucher == voucherNumber;
+
+        if (ledgerJournalTrans.RecId)
+        {
+            // Voucher exists - optional: show message or continue logic
+            info(strFmt("Voucher %1 found.", voucherNumber));
+        }
+        else
+        {
+            // Voucher not found - optional: show warning or clear field
+            warning(strFmt("Voucher %1 not found in LedgerJournalTrans.", voucherNumber));
+            control.text(""); // Optionally clear the control
+        }
+    }
+
+}
