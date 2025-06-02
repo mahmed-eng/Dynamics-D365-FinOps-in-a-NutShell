@@ -1,0 +1,171 @@
+[Form]
+public class DIN_TransferMFGVendorForm extends FormRun
+{
+    // Form-level variable to hold the temporary table buffer
+    DIN_TransferMFGVendorTempTable tempTableBuffer;
+
+    public void init()
+    {
+        super();
+        
+      //Initialize the temporary table buffer
+        tempTableBuffer = this.dataSource(formDataSourceStr(DIN_TransferMFGVendorForm, DIN_TransferMFGVendorTempTable)).cursor();
+      //tempTableBuffer.setTmp(); // Ensure the table is temporary
+    }
+
+    [Control("Button")]
+    class Update
+    {
+        public void clicked()
+        {
+            super();
+
+            // Get the form data source
+            FormDataSource tempTableDS = this.formRun().dataSource(formDataSourceStr(DIN_TransferMFGVendorForm, DIN_TransferMFGVendorTempTable));
+    
+            // Get current record from temp table
+            DIN_TransferMFGVendorTempTable tempTableRecord = tempTableDS.cursor();
+
+            // Step 1: Validate voucher number
+            if (!tempTableRecord.VoucherNum)
+            {
+                warning("Voucher number is missing in the temp table record.");
+                return;
+            }
+
+            // Step 2: Store values before clearing temp table
+            str storedVoucher  = tempTableRecord.VoucherNum;
+            str newVendor      = tempTableRecord.ToMFGVendor;
+            str newVendorName  = tempTableRecord.ToMFGVendorName;
+
+            // Step 3: Update LedgerJournalTrans
+            LedgerJournalTrans ledgerJournalTrans;
+
+            ttsbegin;
+
+            select forupdate ledgerJournalTrans
+            where ledgerJournalTrans.Voucher == storedVoucher;
+
+            if (ledgerJournalTrans)
+            {
+                ledgerJournalTrans.VendorNumber = newVendor;
+                ledgerJournalTrans.VendorName   = newVendorName;
+
+                ledgerJournalTrans.doUpdate();
+
+                ttscommit;
+
+                info(strFmt("LedgerJournalTrans updated for voucher %1.", storedVoucher));
+
+                // Step 4: Clear all records from temp table
+                delete_from tempTableBuffer;
+
+                // Step 5: Re-fetch updated record from LedgerJournalTrans
+                select firstonly TransDate, Voucher, AmountCurCredit, AmountCurDebit, VendorNumber, VendorName
+                from ledgerJournalTrans
+                where ledgerJournalTrans.Voucher == storedVoucher;
+
+                if (ledgerJournalTrans)
+                {
+                    // Step 6: Insert updated record back into temp table using form-bound buffer
+                    tempTableBuffer.clear();
+                    tempTableBuffer.TransDate         = ledgerJournalTrans.TransDate;
+                    tempTableBuffer.VoucherNum        = ledgerJournalTrans.Voucher;
+                    tempTableBuffer.Amount            = (ledgerJournalTrans.AmountCurCredit != 0)
+                                                    ? ledgerJournalTrans.AmountCurCredit
+                                                    : ledgerJournalTrans.AmountCurDebit;
+                    tempTableBuffer.FromMFGVendor     = ledgerJournalTrans.VendorNumber;
+                    tempTableBuffer.FromMFGVendorName = ledgerJournalTrans.VendorName;
+                    tempTableBuffer.ToMFGVendor       = ledgerJournalTrans.VendorNumber;
+                    tempTableBuffer.ToMFGVendorName   = ledgerJournalTrans.VendorName;
+
+                    tempTableBuffer.insert();
+
+                    // Step 7: Refresh UI
+                    tempTableDS.research(true);
+                    tempTableDS.refresh();
+                }
+                else
+                {
+                    warning("LedgerJournalTrans record not found after update.");
+                }
+            }
+            else
+            {
+                ttsabort;
+                warning(strFmt("No LedgerJournalTrans record found for voucher %1.", storedVoucher));
+            }
+        }
+
+    }
+
+    [Control("Button")]
+    class SearchBtn
+    {
+        public void clicked()
+        {
+            super();
+
+            // Get user input from the SearchVoucherNumber field
+            FormStringControl voucherCtrl = this.formRun().design().controlName("SearchVoucherNumber") as FormStringControl;
+            str searchVoucher = voucherCtrl.text();
+
+            // Validate input
+            if (!searchVoucher)
+            {
+                warning("Please enter a voucher number.");
+                return;
+            }
+
+            // Declare variables
+            LedgerJournalTrans               ledgerJournalTrans;
+            DIN_TransferMFGVendorTempTable   tempTable;
+
+            // Query LedgerJournalTrans for the voucher
+            select firstonly TransDate, Voucher, AmountCurCredit, AmountCurDebit, VendorNumber, VendorName
+            from ledgerJournalTrans
+            where ledgerJournalTrans.Voucher == searchVoucher
+               && (ledgerJournalTrans.AmountCurCredit != 0 || ledgerJournalTrans.AmountCurDebit != 0);
+
+            // Check if a record was found
+            if (ledgerJournalTrans)
+            {
+                // Use the form's temp table buffer
+                tempTable = tempTableBuffer;
+                tempTable.clear();
+                tempTable.TransDate         = ledgerJournalTrans.TransDate;
+                tempTable.VoucherNum        = ledgerJournalTrans.Voucher;
+                tempTable.Amount            = (ledgerJournalTrans.AmountCurCredit != 0)
+                                              ? ledgerJournalTrans.AmountCurCredit
+                                              : ledgerJournalTrans.AmountCurDebit;
+                tempTable.FromMFGVendor     = ledgerJournalTrans.VendorNumber;
+                tempTable.FromMFGVendorName = ledgerJournalTrans.VendorName;
+
+                // Insert record into temp table
+                tempTable.insert();
+
+                // Debug to confirm insertion
+                info(strFmt("Record inserted: Voucher=%1, Amount=%2", tempTable.VoucherNum, tempTable.Amount));
+
+                // Refresh the form's data source to display the new record
+                FormDataSource tempTableDS = this.formRun().dataSource(formDataSourceStr(DIN_TransferMFGVendorForm, DIN_TransferMFGVendorTempTable));
+                if (tempTableDS)
+                {
+                    tempTableDS.write(); // Force refresh of the data source
+                    tempTableDS.research(true); // Requery and maintain cursor position
+                    tempTableDS.refresh(); // Ensure UI is updated
+                }
+
+                info("Search completed and data transferred.");
+
+                voucherCtrl.text("");
+            }
+            else
+            {
+                warning("No records found for the specified voucher number.");
+            }
+        }
+
+    }
+
+}

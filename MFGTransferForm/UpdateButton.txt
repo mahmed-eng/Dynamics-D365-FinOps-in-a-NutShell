@@ -1,0 +1,85 @@
+  [Control("Button")]
+    class Update
+    {
+        public void clicked()
+        {
+            super();
+
+            // Get the form data source
+            FormDataSource tempTableDS = this.formRun().dataSource(formDataSourceStr(DIN_TransferMFGVendorForm, DIN_TransferMFGVendorTempTable));
+    
+            // Get current record from temp table
+            DIN_TransferMFGVendorTempTable tempTableRecord = tempTableDS.cursor();
+
+            // Step 1: Validate voucher number
+            if (!tempTableRecord.VoucherNum)
+            {
+                warning("Voucher number is missing in the temp table record.");
+                return;
+            }
+
+            // Step 2: Store values before clearing temp table
+            str storedVoucher  = tempTableRecord.VoucherNum;
+            str newVendor      = tempTableRecord.ToMFGVendor;
+            str newVendorName  = tempTableRecord.ToMFGVendorName;
+
+            // Step 3: Update LedgerJournalTrans
+            LedgerJournalTrans ledgerJournalTrans;
+
+            ttsbegin;
+
+            select forupdate ledgerJournalTrans
+            where ledgerJournalTrans.Voucher == storedVoucher;
+
+            if (ledgerJournalTrans)
+            {
+                ledgerJournalTrans.VendorNumber = newVendor;
+                ledgerJournalTrans.VendorName   = newVendorName;
+
+                ledgerJournalTrans.doUpdate();
+
+                ttscommit;
+
+                info(strFmt("LedgerJournalTrans updated for voucher %1.", storedVoucher));
+
+                // Step 4: Clear all records from temp table
+                delete_from tempTableBuffer;
+
+                // Step 5: Re-fetch updated record from LedgerJournalTrans
+                select firstonly TransDate, Voucher, AmountCurCredit, AmountCurDebit, VendorNumber, VendorName
+                from ledgerJournalTrans
+                where ledgerJournalTrans.Voucher == storedVoucher;
+
+                if (ledgerJournalTrans)
+                {
+                    // Step 6: Insert updated record back into temp table using form-bound buffer
+                    tempTableBuffer.clear();
+                    tempTableBuffer.TransDate         = ledgerJournalTrans.TransDate;
+                    tempTableBuffer.VoucherNum        = ledgerJournalTrans.Voucher;
+                    tempTableBuffer.Amount            = (ledgerJournalTrans.AmountCurCredit != 0)
+                                                    ? ledgerJournalTrans.AmountCurCredit
+                                                    : ledgerJournalTrans.AmountCurDebit;
+                    tempTableBuffer.FromMFGVendor     = ledgerJournalTrans.VendorNumber;
+                    tempTableBuffer.FromMFGVendorName = ledgerJournalTrans.VendorName;
+                    tempTableBuffer.ToMFGVendor       = ledgerJournalTrans.VendorNumber;
+                    tempTableBuffer.ToMFGVendorName   = ledgerJournalTrans.VendorName;
+
+                    tempTableBuffer.insert();
+
+                    // Step 7: Refresh UI
+                    tempTableDS.research(true);
+                    tempTableDS.refresh();
+                }
+                else
+                {
+                    warning("LedgerJournalTrans record not found after update.");
+                }
+            }
+            else
+            {
+                ttsabort;
+                warning(strFmt("No LedgerJournalTrans record found for voucher %1.", storedVoucher));
+            }
+        }
+
+    }

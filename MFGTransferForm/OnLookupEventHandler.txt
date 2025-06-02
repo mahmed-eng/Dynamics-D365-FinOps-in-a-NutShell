@@ -1,0 +1,20 @@
+internal final class DIN_MFGVendorOnLookupEventHandler
+{
+    [FormControlEventHandler(formControlStr(DIN_TransferMFGVendorForm, DIN_TransferMFGVendorTempTable_ToMFGVendor), FormControlEventType::Lookup)]
+    public static void DIN_TransferMFGVendorTempTable_ToMFGVendor_OnLookup(FormControl sender, FormControlEventArgs e)
+    {
+        SysTableLookup sysTableLookup = SysTableLookup::newParameters(
+            tableNum(CfzVendorPaymentJournal), sender);
+        
+        Query query = new Query();
+        QueryBuildDataSource qbds = query.addDataSource(tableNum(CfzVendorPaymentJournal));
+        
+        // First field added is the return value (VendorNumber will be returned)
+        sysTableLookup.addLookupfield(fieldNum(CfzVendorPaymentJournal, VendorNumber), true); // true = return this value
+        sysTableLookup.addLookupfield(fieldNum(CfzVendorPaymentJournal, VendorName));
+
+        sysTableLookup.parmQuery(query);
+        sysTableLookup.performFormLookup();
+    }
+
+}
