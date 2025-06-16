@@ -26,6 +26,10 @@ Query:
 3.	AXUpdateInstaller.exe import -runbookfile="0508.xml"
 4.	AXUpdateInstaller.exe list
 5.	AXUpdateInstaller.exe execute -runbookid="10027"
+Note: In case of failure of step Like 17
 6.	AXUpdateInstaller.exe execute -runbookid="10027" -rerunstep="17"   To rerun any stepo
 
-       Note: In case of failure of step 19 follow this "https://www.linkedin.com/pulse/adding-d365-fo-extension-visual-studio-development-shayan-arshi/"
+GUIDE:
+https://www.linkedin.com/pulse/adding-d365-fo-extension-visual-studio-development-shayan-arshi/
+https://axaptamasters.com/installing-a-deployable-package/
+https://gfeaxblog.wordpress.com/2018/03/21/d365-install-a-deployable-package/
