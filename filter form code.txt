@@ -1,0 +1,101 @@
+//Updated code
+[Form]
+public class DateFilterForm extends FormRun
+{
+    // Declare variables for the controls
+    FormDateControl   startDateControl;
+    FormDateControl   endDateControl;
+    FormButtonControl filterButton;
+
+    // Initialize the form controls
+    public void init()
+    {
+        super();
+        
+        // Bind the controls to the form's controls
+        startDateControl = this.control(this.controlId("FormDateControl1"));
+        endDateControl = this.control(this.controlId("FormDateControl2"));
+        filterButton = this.control(this.controlId("FormButtonControl1"));
+    }
+
+    // Override the clicked method for the button
+    [Control("Button")]
+    class FormButtonControl1
+    {
+        public void clicked()
+        {
+            super();
+            
+            // Get the data source
+            FormDataSource dinAdminDS = this.formRun().dataSource(formDataSourceStr(DateFilterForm, DinAdmin));
+            Query query = dinAdminDS.query();
+            QueryBuildDataSource qbds = query.dataSourceTable(tableNum(DinAdmin));
+            QueryBuildRange range;
+
+            // Clear any existing ranges for SYSCREATEDDATETIME
+            qbds.clearRanges();
+            
+            // Get the date values from the controls
+            date startDate = any2Date(startDateControl.valueStr());
+            date endDate = any2Date(endDateControl.valueStr());
+            
+            // Use default values if no date is selected
+            if (!startDate)
+            {
+                startDate = Global::dateNull();
+            }
+            if (!endDate)
+            {
+                endDate = str2Date("31/12/2154", 123);
+            }
+            
+            // Validate dates
+            if (startDate && endDate && startDate > endDate)
+            {
+                warning("Start date cannot be later than end date.");
+                return;
+            }
+
+            // Add range for SYSCREATEDDATETIME
+            if (startDate != Global::dateNull() || endDate != str2Date("31/12/2154", 123))
+            {
+                range = qbds.addRange(fieldNum(DinAdmin, SYSCREATEDDATETIME));
+                
+                // Set the range based on input dates
+                if (startDate != Global::dateNull() && endDate != str2Date("31/12/2154", 123))
+                {
+                    range.value(strFmt('((SYSCREATEDDATETIME >= %1) && (SYSCREATEDDATETIME <= %2))',
+                        DateTimeUtil::toStr(DateTimeUtil::newDateTime(startDate, 0)),
+                        DateTimeUtil::toStr(DateTimeUtil::newDateTime(endDate, 235959))));
+                }
+                else if (startDate != Global::dateNull())
+                {
+                    range.value(strFmt('(SYSCREATEDDATETIME >= %1)',
+                        DateTimeUtil::toStr(DateTimeUtil::newDateTime(startDate, 0))));
+                }
+                else if (endDate != str2Date("31/12/2154", 123))
+                {
+                    range.value(strFmt('(SYSCREATEDDATETIME <= %1)',
+                        DateTimeUtil::toStr(DateTimeUtil::newDateTime(endDate, 235959))));
+                }
+            }
+
+            // Execute the query to refresh the grid
+            dinAdminDS.executeQuery();
+        }
+    }
+
+    // Ensure the grid displays the specified fields
+    [DataSource]
+    class DinAdmin
+    {
+        public void init()
+        {
+            super();
+            
+            // Ensure all required fields are available in the grid
+            // Fields: RESPONSIBLE_NAME, GPCATEGORY, RETURNDATE, STATUS, DEPT_LOOKUP, etc.
+            // These should be added to the grid in the form designer
+        }
+    }
+}
